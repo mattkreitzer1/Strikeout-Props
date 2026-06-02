@@ -1,0 +1,12 @@
+# MLB Stats API (statsapi.mlb.com) — free, no key required.
+
+schedule_hydrate: probablePitcher
+
+# When lineups are not posted yet, use this LHB share for the opposing lineup.
+default_opp_lhb_pct: 0.40
+
+# Minimum batters in the posted order to trust lineup-based opp_lhb_pct.
+min_lineup_batters: 5
+
+# Seconds between people/feed API calls.
+seconds_between_requests: 0.15

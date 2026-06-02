@@ -1,0 +1,10 @@
+# Phase 2: compare fair K to sportsbook lines (FanDuel etc.).
+
+# Spread of strikeouts around fair_k for over/under probabilities (normal approx).
+k_sigma: 1.75
+
+# Flag a side when model probability beats no-vig implied by at least this much (0.03 = 3%).
+min_edge: 0.03
+
+# Use no-vig implied probs (over + under normalized to 100%) for edge calculation.
+use_no_vig_implied: true

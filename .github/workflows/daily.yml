@@ -1,0 +1,75 @@
+# Daily pitcher K prop pipeline (Savant → projections → OddsTrader → EV).
+# Scheduled ~6 AM US/Eastern; also runnable manually from the Actions tab.
+
+name: Daily K props
+
+on:
+  schedule:
+    # 10:00 UTC ≈ 6:00 AM EDT / 7:00 AM EST
+    - cron: "0 10 * * *"
+  workflow_dispatch:
+    inputs:
+      run_date:
+        description: "Run date (YYYY-MM-DD). Blank = today in America/New_York."
+        required: false
+        type: string
+
+jobs:
+  run-daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e . --config-settings editable_mode=compat
+
+      - name: Set run date (America/New_York)
+        id: date
+        run: |
+          if [ -n "${{ inputs.run_date }}" ]; then
+            RUN_DATE="${{ inputs.run_date }}"
+          else
+            RUN_DATE=$(TZ=America/New_York date +%Y-%m-%d)
+          fi
+          echo "RUN_DATE=${RUN_DATE}" >> "$GITHUB_ENV"
+          echo "run_date=${RUN_DATE}" >> "$GITHUB_OUTPUT"
+
+      - name: Run daily pipeline
+        run: python -m mlb_kprop run-daily --date "$RUN_DATE"
+
+      - name: Email daily digest
+        if: success()
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+        run: python -m mlb_kprop send-email --date "$RUN_DATE"
+
+      - name: Upload daily artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kprop-${{ steps.date.outputs.run_date }}
+          retention-days: 14
+          path: |
+            reports/value_${{ steps.date.outputs.run_date }}.csv
+            reports/projections_${{ steps.date.outputs.run_date }}.csv
+            reports/validation_${{ steps.date.outputs.run_date }}.txt
+            reports/savant_fetch_${{ steps.date.outputs.run_date }}.csv
+            data/starters/${{ steps.date.outputs.run_date }}.csv
+            data/lines/${{ steps.date.outputs.run_date }}.csv
+          if-no-files-found: warn

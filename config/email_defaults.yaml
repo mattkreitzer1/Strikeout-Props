@@ -1,0 +1,10 @@
+# Email digest (non-secret settings). SMTP credentials come from environment variables.
+
+# Subject line; {date} is replaced with the run date.
+subject: "MLB K props — {date}"
+
+# Max flagged plays to include in the email body (sorted by best edge).
+max_plays_in_body: 15
+
+# Include PASS rows count in footer (full CSV still attached if enabled).
+attach_value_csv: true

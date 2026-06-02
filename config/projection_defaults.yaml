@@ -1,0 +1,13 @@
+# Defaults for Phase 1 fair strikeout projections (pitcher platoon splits only).
+
+# Typical starters see ~22–26 batters; tweak per pitcher in starters CSV.
+default_batters_faced: 24
+
+# Round fair K to nearest half-strikeout for comparison to sportsbook lines (5.5, 6.0, …).
+round_fair_k_to_half: true
+
+# If pitcher_throws is blank in starters CSV, infer R/L from which split has more pitches.
+infer_pitcher_throws_from_splits: true
+
+# Minimum total pitches in a split row to use it when inferring handedness.
+min_pitches_for_hand_inference: 50
