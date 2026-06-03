@@ -223,7 +223,7 @@ Results land in `reports/value_<date>.csv` on your Mac. You **don’t** need thi
 
 Workflow: [`.github/workflows/daily.yml`](.github/workflows/daily.yml)
 
-- **Schedule:** 10:00 UTC daily (~6 AM Eastern Daylight Time)
+- **Schedule:** 15:00 UTC daily (~11 AM Eastern Daylight Time). GitHub may delay scheduled runs by minutes to hours on free accounts.
 - **Manual run:** GitHub → Actions → *Daily K props* → *Run workflow*
 - **Artifacts:** backup CSVs (14-day retention)
 

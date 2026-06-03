@@ -1,12 +1,12 @@
 # Daily pitcher K prop pipeline (Savant → projections → OddsTrader → EV).
-# Scheduled ~6 AM US/Eastern; also runnable manually from the Actions tab.
+# Scheduled ~11 AM US/Eastern; also runnable manually from the Actions tab.
 
 name: Daily K props
 
 on:
   schedule:
-    # 10:00 UTC ≈ 6:00 AM EDT / 7:00 AM EST
-    - cron: "0 10 * * *"
+    # 15:00 UTC ≈ 11:00 AM EDT / 10:00 AM EST (GitHub cron is UTC-only)
+    - cron: "0 15 * * *"
   workflow_dispatch:
     inputs:
       run_date:
