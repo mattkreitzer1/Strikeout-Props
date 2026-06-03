@@ -58,7 +58,7 @@ Creates:
 python -m mlb_kprop run-daily
 ```
 
-Steps: Savant fetch → features → validate → OddsTrader K lines → MLB probables/lineups → fair K → EV sheet (`reports/value_<date>.csv`).
+Steps: Savant fetch → features → validate → OddsTrader K lines → MLB probables/lineups → fair K → EV sheet (`reports/value_<date>.csv`) → performance tracker.
 
 ## Validate today's data (automated checks)
 
@@ -281,6 +281,34 @@ python -m mlb_kprop send-email --date 2026-05-30             # send
 **4. Test on GitHub:** Actions → *Daily K props* → *Run workflow*. Check your inbox when it finishes.
 
 `data/raw/` and `reports/` stay out of git; CI uploads artifacts and emails the digest.
+
+## Performance tracker (high-EV plays)
+
+Every `run-daily` records flagged plays (`pick` = OVER or UNDER in the value sheet) into a persistent ledger and grades them once MLB box scores are final. Grading uses actual strikeouts from the MLB Stats API vs the book line at bet time (flat 1-unit stakes, profit from the American odds on the pick).
+
+Outputs (committed by GitHub Actions so history survives between runs):
+
+| File | Purpose |
+|------|---------|
+| `data/tracker/ledger.csv` | One row per pick — line, EV, odds, actual K, W/L, units |
+| `data/tracker/daily_rollup.csv` | Per-slate win/loss and ROI |
+| `data/tracker/summary.txt` | Rolling totals + last 7 slate days (also appended to the daily email) |
+
+**Backfill from existing value sheets:**
+
+```bash
+python -m mlb_kprop track-performance --date 2026-05-28
+python -m mlb_kprop track-performance --date 2026-05-29
+python -m mlb_kprop track-performance --date 2026-05-30
+```
+
+**Grade only** (no new picks for that date):
+
+```bash
+python -m mlb_kprop track-performance --date 2026-06-03 --no-record
+```
+
+Config: `config/tracker_defaults.yaml`.
 
 ## Data strategy (short)
 

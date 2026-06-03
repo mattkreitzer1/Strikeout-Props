@@ -83,9 +83,16 @@ def build_digest_body(
         [
             "",
             "Full sheet attached as CSV.",
-            "— mlb_kprop",
         ]
     )
+
+    summary_path = Path("data/tracker/summary.txt")
+    if summary_path.exists():
+        tracker_text = summary_path.read_text(encoding="utf-8").strip()
+        if tracker_text:
+            lines.extend(["", "---", tracker_text])
+
+    lines.extend(["", "— mlb_kprop"])
     return "\n".join(lines), len(picks)
 
 

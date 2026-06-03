@@ -19,6 +19,7 @@ from mlb_kprop.odds.fetch import fetch_oddstrader_lines
 from mlb_kprop.odds.oddstrader import DEFAULT_CONFIG_PATH as DEFAULT_ODDSTRADER_CONFIG
 from mlb_kprop.projections.score import score_projections
 from mlb_kprop.projections.value import value_props
+from mlb_kprop.tracker.ledger import track_performance
 from mlb_kprop.savant.fetch import fetch_all_sources, write_fetch_manifest
 
 DEFAULT_MLB_CONFIG = Path("config/mlb_defaults.yaml")
@@ -31,6 +32,7 @@ class DailyOutputs:
     projections_csv: Path | None
     value_csv: Path | None
     value_plays: int
+    tracker_summary: Path | None = None
 
 
 def run_daily(
@@ -103,6 +105,7 @@ def run_daily(
     projections_csv: Path | None = None
     value_csv: Path | None = None
     value_plays = 0
+    tracker_summary: Path | None = None
 
     if run_model:
         print("\nStep 6: Sync probable pitchers + opp LHB% from MLB API...")
@@ -144,6 +147,21 @@ def run_daily(
                     ["player_name", "pick", "book_line", "edge_over", "edge_under", "ev_over", "ev_under"]
                 ]
                 print(picks.to_string(index=False))
+
+            print("\nStep 9: Track pick performance (record + grade)...")
+            tracker_outputs = track_performance(
+                run_date=run_date,
+                reports_root=out_dir,
+                value_path=value_csv,
+            )
+            tracker_summary = tracker_outputs.summary_txt
+            print(
+                f"  {tracker_outputs.ledger_csv} "
+                f"(+{tracker_outputs.picks_recorded} new, "
+                f"graded {tracker_outputs.picks_graded}, "
+                f"{tracker_outputs.pending_count} pending)"
+            )
+            print(f"  {tracker_summary}")
         else:
             print("\nStep 8: Skipped value-props (--skip-odds).")
 
@@ -152,4 +170,5 @@ def run_daily(
         projections_csv=projections_csv,
         value_csv=value_csv,
         value_plays=value_plays,
+        tracker_summary=tracker_summary,
     )

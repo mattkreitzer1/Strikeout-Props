@@ -18,6 +18,8 @@ jobs:
   run-daily:
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -59,6 +61,19 @@ jobs:
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
         run: python -m mlb_kprop send-email --date "$RUN_DATE"
 
+      - name: Commit performance tracker
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/tracker/
+          if git diff --staged --quiet; then
+            echo "No tracker changes to commit."
+          else
+            git commit -m "Update K prop performance tracker for ${RUN_DATE}"
+            git push
+          fi
+
       - name: Upload daily artifacts
         uses: actions/upload-artifact@v4
         if: always()
@@ -72,4 +87,5 @@ jobs:
             reports/savant_fetch_${{ steps.date.outputs.run_date }}.csv
             data/starters/${{ steps.date.outputs.run_date }}.csv
             data/lines/${{ steps.date.outputs.run_date }}.csv
+            data/tracker/
           if-no-files-found: warn

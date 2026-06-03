@@ -22,6 +22,7 @@ from mlb_kprop.projections.lines import write_lines_template
 from mlb_kprop.projections.value import value_props
 from mlb_kprop.odds.fetch import fetch_oddstrader_lines
 from mlb_kprop.notify.email import send_daily_digest
+from mlb_kprop.tracker.ledger import track_performance
 
 
 @dataclass(frozen=True)
@@ -47,6 +48,9 @@ class CliArgs:
     skip_model: bool = False
     mlb_config: Path = Path("config/mlb_defaults.yaml")
     email_config: Path = Path("config/email_defaults.yaml")
+    tracker_config: Path = Path("config/tracker_defaults.yaml")
+    no_record: bool = False
+    no_grade: bool = False
     dry_run: bool = False
 
 
@@ -324,6 +328,34 @@ def _parse_args() -> CliArgs:
         help="Print the email instead of sending.",
     )
 
+    track_parser = subparsers.add_parser(
+        "track-performance",
+        help="Record flagged picks and grade results (updates data/tracker/).",
+    )
+    add_shared_options(track_parser)
+    track_parser.add_argument(
+        "--out-dir",
+        type=Path,
+        default=Path("reports"),
+        help="Folder containing value_<date>.csv.",
+    )
+    track_parser.add_argument(
+        "--tracker-config",
+        type=Path,
+        default=Path("config/tracker_defaults.yaml"),
+        help="Ledger and summary output paths.",
+    )
+    track_parser.add_argument(
+        "--no-record",
+        action="store_true",
+        help="Skip recording today's picks (grade pending only).",
+    )
+    track_parser.add_argument(
+        "--no-grade",
+        action="store_true",
+        help="Skip grading pending picks (record today only).",
+    )
+
     ns = parser.parse_args()
     out_dir = getattr(ns, "out_dir", Path("reports"))
     return CliArgs(
@@ -352,6 +384,11 @@ def _parse_args() -> CliArgs:
         skip_model=getattr(ns, "skip_model", False),
         mlb_config=getattr(ns, "mlb_config", Path("config/mlb_defaults.yaml")),
         email_config=getattr(ns, "email_config", Path("config/email_defaults.yaml")),
+        tracker_config=getattr(
+            ns, "tracker_config", Path("config/tracker_defaults.yaml")
+        ),
+        no_record=getattr(ns, "no_record", False),
+        no_grade=getattr(ns, "no_grade", False),
         dry_run=getattr(ns, "dry_run", False),
     )
 
@@ -479,6 +516,25 @@ def _run_send_email(args: CliArgs) -> None:
     )
 
 
+def _run_track_performance(args: CliArgs) -> None:
+    outputs = track_performance(
+        run_date=args.date,
+        reports_root=args.out_dir,
+        config_path=args.tracker_config,
+        record_today=not args.no_record,
+        grade_pending=not args.no_grade,
+    )
+    print(
+        f"Ledger: {outputs.ledger_csv} "
+        f"(+{outputs.picks_recorded} new, graded {outputs.picks_graded}, "
+        f"{outputs.pending_count} pending)"
+    )
+    print(f"Summary: {outputs.summary_txt}")
+    print(f"Daily rollup: {outputs.daily_rollup_csv}")
+    print()
+    print(outputs.summary_txt.read_text(encoding="utf-8"))
+
+
 def main() -> None:
     args = _parse_args()
 
@@ -536,6 +592,10 @@ def main() -> None:
 
     if args.command == "send-email":
         _run_send_email(args)
+        return
+
+    if args.command == "track-performance":
+        _run_track_performance(args)
         return
 
     raise RuntimeError(f"Unknown command: {args.command}")

@@ -1,0 +1,8 @@
+# Performance tracker for flagged EV plays (pick != PASS in value sheet).
+
+ledger_path: data/tracker/ledger.csv
+summary_path: data/tracker/summary.txt
+daily_rollup_path: data/tracker/daily_rollup.csv
+
+# Only track rows that were flagged in value-props (respects min_edge there).
+track_pass_rows: false
