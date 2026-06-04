@@ -6,3 +6,5 @@ Win rate: 55.3%  |  Units: +1.33  |  ROI: +3.5% (1u flat)
 Last 7 slate days:
   2026-05-30: 18-11 (29 picks, +4.60u)
   2026-05-29: 3-6 (9 picks, -3.27u)
+
+Pending (awaiting final stats): 11
