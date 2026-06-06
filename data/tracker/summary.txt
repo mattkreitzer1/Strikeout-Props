@@ -1,11 +1,12 @@
 MLB K prop tracker — performance history
 
-Graded plays: 49 (27-22-0)
-Win rate: 55.1%  |  Units: +1.47  |  ROI: +3.0% (1u flat)
+Graded plays: 73 (39-34-0)
+Win rate: 53.4%  |  Units: -0.85  |  ROI: -1.2% (1u flat)
 
 Last 7 slate days:
+  2026-06-05: 12-12 (24 picks, -2.32u)
   2026-06-04: 6-5 (11 picks, +0.14u)
   2026-05-30: 18-11 (29 picks, +4.60u)
   2026-05-29: 3-6 (9 picks, -3.27u)
 
-Pending (awaiting final stats): 24
+Pending (awaiting final stats): 21
