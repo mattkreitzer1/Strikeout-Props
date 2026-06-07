@@ -32,10 +32,18 @@ LEDGER_COLUMNS = [
 
 
 @dataclass(frozen=True)
+class EvBucket:
+    label: str
+    min_ev: float
+    max_ev: float | None
+
+
+@dataclass(frozen=True)
 class TrackerOutputs:
     ledger_csv: Path
     summary_txt: Path
     daily_rollup_csv: Path
+    ev_rollup_csv: Path
     picks_recorded: int
     picks_graded: int
     pending_count: int
@@ -48,6 +56,56 @@ def load_tracker_config(config_path: Path = DEFAULT_CONFIG_PATH) -> dict[str, An
 
 def ledger_path_from_config(config: dict[str, Any]) -> Path:
     return Path(config.get("ledger_path", "data/tracker/ledger.csv"))
+
+
+def ev_buckets_from_config(config: dict[str, Any]) -> list[EvBucket]:
+    raw = config.get("ev_buckets")
+    if not raw:
+        return [
+            EvBucket("Thin (<5% EV)", 0.0, 0.05),
+            EvBucket("Moderate (5-15% EV)", 0.05, 0.15),
+            EvBucket("Strong (15-25% EV)", 0.15, 0.25),
+            EvBucket("Elite (25%+ EV)", 0.25, None),
+        ]
+    buckets: list[EvBucket] = []
+    for entry in raw:
+        max_ev = entry.get("max_ev")
+        buckets.append(
+            EvBucket(
+                label=str(entry["label"]),
+                min_ev=float(entry["min_ev"]),
+                max_ev=None if max_ev is None else float(max_ev),
+            )
+        )
+    return buckets
+
+
+def assign_ev_bucket(ev: float, buckets: list[EvBucket]) -> str:
+    for bucket in buckets:
+        if ev >= bucket.min_ev and (bucket.max_ev is None or ev < bucket.max_ev):
+            return bucket.label
+    return "Other"
+
+
+def _bucket_stats(df: pd.DataFrame) -> dict[str, float | int]:
+    wins = int((df["result"] == "WIN").sum())
+    losses = int((df["result"] == "LOSS").sum())
+    pushes = int((df["result"] == "PUSH").sum())
+    units = float(df["profit_units"].sum())
+    bets = wins + losses
+    win_pct = (100.0 * wins / bets) if bets else 0.0
+    roi = (100.0 * units / bets) if bets else 0.0
+    avg_ev = float(df["pick_ev"].mean()) if not df.empty else 0.0
+    return {
+        "picks": len(df),
+        "wins": wins,
+        "losses": losses,
+        "pushes": pushes,
+        "units": units,
+        "win_pct": win_pct,
+        "roi_pct": roi,
+        "avg_ev": avg_ev,
+    }
 
 
 def _load_ledger(path: Path) -> pd.DataFrame:
@@ -199,31 +257,110 @@ def grade_pending_picks(
     return graded_count
 
 
-def build_summary_text(ledger: pd.DataFrame) -> str:
+def build_ev_bucket_rollup(
+    ledger: pd.DataFrame,
+    buckets: list[EvBucket],
+) -> pd.DataFrame:
+    graded = ledger[ledger["result"].isin(["WIN", "LOSS", "PUSH"])].copy()
+    columns = [
+        "ev_bucket",
+        "min_ev",
+        "max_ev",
+        "picks",
+        "wins",
+        "losses",
+        "pushes",
+        "units",
+        "win_pct",
+        "roi_pct",
+        "avg_pick_ev",
+    ]
+    if graded.empty:
+        return pd.DataFrame(columns=columns)
+
+    graded["ev_bucket"] = graded["pick_ev"].astype(float).apply(
+        lambda ev: assign_ev_bucket(ev, buckets)
+    )
+
+    rows: list[dict[str, object]] = []
+    for bucket in buckets:
+        subset = graded[graded["ev_bucket"] == bucket.label]
+        if subset.empty:
+            continue
+        stats = _bucket_stats(subset)
+        rows.append(
+            {
+                "ev_bucket": bucket.label,
+                "min_ev": bucket.min_ev,
+                "max_ev": bucket.max_ev,
+                "picks": stats["picks"],
+                "wins": stats["wins"],
+                "losses": stats["losses"],
+                "pushes": stats["pushes"],
+                "units": round(stats["units"], 4),
+                "win_pct": round(stats["win_pct"], 1),
+                "roi_pct": round(stats["roi_pct"], 1),
+                "avg_pick_ev": round(stats["avg_ev"], 4),
+            }
+        )
+
+    other = graded[~graded["ev_bucket"].isin([b.label for b in buckets])]
+    if not other.empty:
+        stats = _bucket_stats(other)
+        rows.append(
+            {
+                "ev_bucket": "Other",
+                "min_ev": pd.NA,
+                "max_ev": pd.NA,
+                "picks": stats["picks"],
+                "wins": stats["wins"],
+                "losses": stats["losses"],
+                "pushes": stats["pushes"],
+                "units": round(stats["units"], 4),
+                "win_pct": round(stats["win_pct"], 1),
+                "roi_pct": round(stats["roi_pct"], 1),
+                "avg_pick_ev": round(stats["avg_ev"], 4),
+            }
+        )
+
+    return pd.DataFrame(rows, columns=columns)
+
+
+def build_summary_text(
+    ledger: pd.DataFrame,
+    buckets: list[EvBucket] | None = None,
+) -> str:
     graded = ledger[ledger["result"].isin(["WIN", "LOSS", "PUSH"])].copy()
     pending = ledger[ledger["result"] == "PENDING"]
+    bucket_defs = buckets or ev_buckets_from_config({})
 
     lines = ["MLB K prop tracker — performance history", ""]
 
     if graded.empty:
         lines.append("No graded plays yet.")
     else:
-        wins = int((graded["result"] == "WIN").sum())
-        losses = int((graded["result"] == "LOSS").sum())
-        pushes = int((graded["result"] == "PUSH").sum())
-        units = float(graded["profit_units"].sum())
-        bets = wins + losses
-        win_pct = (100.0 * wins / bets) if bets else 0.0
-        roi = (100.0 * units / bets) if bets else 0.0
-
+        stats = _bucket_stats(graded)
         lines.extend(
             [
-                f"Graded plays: {len(graded)} ({wins}-{losses}-{pushes})",
-                f"Win rate: {win_pct:.1f}%  |  Units: {units:+.2f}  |  ROI: {roi:+.1f}% (1u flat)",
+                f"Graded plays: {stats['picks']} "
+                f"({stats['wins']}-{stats['losses']}-{stats['pushes']})",
+                f"Win rate: {stats['win_pct']:.1f}%  |  "
+                f"Units: {stats['units']:+.2f}  |  "
+                f"ROI: {stats['roi_pct']:+.1f}% (1u flat)",
                 "",
-                "Last 7 slate days:",
+                "By EV bucket:",
             ]
         )
+
+        ev_rollup = build_ev_bucket_rollup(graded, bucket_defs)
+        for _, row in ev_rollup.iterrows():
+            lines.append(
+                f"  {row['ev_bucket']}: {int(row['wins'])}-{int(row['losses'])} "
+                f"({int(row['picks'])} picks, {row['units']:+.2f}u, "
+                f"{row['roi_pct']:+.1f}% ROI, avg EV {row['avg_pick_ev']:.1%})"
+            )
+
+        lines.extend(["", "Last 7 slate days:"])
 
         rollup = (
             graded.groupby("slate_date", as_index=False)
@@ -287,6 +424,8 @@ def track_performance(
     ledger_path = ledger_path_from_config(cfg)
     summary_path = Path(cfg.get("summary_path", "data/tracker/summary.txt"))
     rollup_path = Path(cfg.get("daily_rollup_path", "data/tracker/daily_rollup.csv"))
+    ev_rollup_path = Path(cfg.get("ev_rollup_path", "data/tracker/ev_rollup.csv"))
+    buckets = ev_buckets_from_config(cfg)
 
     value_csv = value_path or reports_root / f"value_{run_date.isoformat()}.csv"
     picks_recorded = 0
@@ -301,16 +440,21 @@ def track_performance(
     pending_count = int((ledger["result"] == "PENDING").sum())
 
     summary_path.parent.mkdir(parents=True, exist_ok=True)
-    summary_path.write_text(build_summary_text(ledger), encoding="utf-8")
+    summary_path.write_text(build_summary_text(ledger, buckets), encoding="utf-8")
 
     rollup = build_daily_rollup(ledger)
     rollup_path.parent.mkdir(parents=True, exist_ok=True)
     rollup.to_csv(rollup_path, index=False)
 
+    ev_rollup = build_ev_bucket_rollup(ledger, buckets)
+    ev_rollup_path.parent.mkdir(parents=True, exist_ok=True)
+    ev_rollup.to_csv(ev_rollup_path, index=False)
+
     return TrackerOutputs(
         ledger_csv=ledger_path,
         summary_txt=summary_path,
         daily_rollup_csv=rollup_path,
+        ev_rollup_csv=ev_rollup_path,
         picks_recorded=picks_recorded,
         picks_graded=picks_graded,
         pending_count=pending_count,

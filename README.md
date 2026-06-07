@@ -292,7 +292,8 @@ Outputs (committed by GitHub Actions so history survives between runs):
 |------|---------|
 | `data/tracker/ledger.csv` | One row per pick — line, EV, odds, actual K, W/L, units |
 | `data/tracker/daily_rollup.csv` | Per-slate win/loss and ROI |
-| `data/tracker/summary.txt` | Rolling totals + last 7 slate days (also appended to the daily email) |
+| `data/tracker/ev_rollup.csv` | W/L and ROI grouped by EV bucket (thin / moderate / strong / elite) |
+| `data/tracker/summary.txt` | Rolling totals, EV buckets, last 7 slate days (also in daily email) |
 
 **Backfill from existing value sheets:**
 
@@ -308,7 +309,7 @@ python -m mlb_kprop track-performance --date 2026-05-30
 python -m mlb_kprop track-performance --date 2026-06-03 --no-record
 ```
 
-Config: `config/tracker_defaults.yaml`.
+Config: `config/tracker_defaults.yaml` (including `ev_buckets` cutoffs for thin / moderate / strong / elite plays).
 
 ## Data strategy (short)
 

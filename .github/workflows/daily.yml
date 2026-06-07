@@ -87,5 +87,8 @@ jobs:
             reports/savant_fetch_${{ steps.date.outputs.run_date }}.csv
             data/starters/${{ steps.date.outputs.run_date }}.csv
             data/lines/${{ steps.date.outputs.run_date }}.csv
-            data/tracker/
+            data/tracker/ledger.csv
+            data/tracker/daily_rollup.csv
+            data/tracker/ev_rollup.csv
+            data/tracker/summary.txt
           if-no-files-found: warn

@@ -3,6 +3,12 @@ MLB K prop tracker — performance history
 Graded plays: 73 (39-34-0)
 Win rate: 53.4%  |  Units: -0.85  |  ROI: -1.2% (1u flat)
 
+By EV bucket:
+  Thin (<5% EV): 6-6 (12 picks, -1.38u, -11.5% ROI, avg EV 2.9%)
+  Moderate (5-15% EV): 5-3 (8 picks, +2.02u, +25.2% ROI, avg EV 9.3%)
+  Strong (15-25% EV): 1-1 (2 picks, +0.10u, +5.0% ROI, avg EV 17.8%)
+  Elite (25%+ EV): 9-7 (16 picks, +0.59u, +3.7% ROI, avg EV 41.2%)
+
 Last 7 slate days:
   2026-06-05: 12-12 (24 picks, -2.32u)
   2026-06-04: 6-5 (11 picks, +0.14u)

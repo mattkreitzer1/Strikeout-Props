@@ -3,6 +3,22 @@
 ledger_path: data/tracker/ledger.csv
 summary_path: data/tracker/summary.txt
 daily_rollup_path: data/tracker/daily_rollup.csv
+ev_rollup_path: data/tracker/ev_rollup.csv
 
 # Only track rows that were flagged in value-props (respects min_edge there).
 track_pass_rows: false
+
+# Grade results grouped by pick_ev at bet time (min inclusive, max exclusive; null = no cap).
+ev_buckets:
+  - label: "Thin (<5% EV)"
+    min_ev: 0.0
+    max_ev: 0.05
+  - label: "Moderate (5-15% EV)"
+    min_ev: 0.05
+    max_ev: 0.15
+  - label: "Strong (15-25% EV)"
+    min_ev: 0.15
+    max_ev: 0.25
+  - label: "Elite (25%+ EV)"
+    min_ev: 0.25
+    max_ev: null
