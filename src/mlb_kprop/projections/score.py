@@ -269,6 +269,12 @@ def score_projections(
                 "opp_k_percent_hand": round(float(opp_profile["opp_k_percent_hand"]), 3),
                 "opp_k_percent_pitch": round(float(opp_profile["opp_k_percent_pitch"]), 3),
                 "opp_whiff_percent": round(float(opp_profile["opp_whiff_percent"]), 3),
+                "opp_whiff_percent_hand": round(
+                    float(opp_profile["opp_whiff_percent_hand"]), 3
+                ),
+                "opp_whiff_percent_pitch": round(
+                    float(opp_profile["opp_whiff_percent_pitch"]), 3
+                ),
                 "opp_chase_percent": round(float(opp_profile["opp_chase_percent"]), 3),
                 "pitcher_whiff_percent": round(skill["whiff_percent"], 3),
                 "pitcher_zone_percent": round(skill["zone_percent"], 3),

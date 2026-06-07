@@ -135,6 +135,37 @@ def pitcher_pitch_mix(
     return {pt: w / total for pt, w in weights.items()}
 
 
+def batter_rate_vs_pitch_mix(
+    batter_id: int,
+    hand: str,
+    pitch_mix: dict[str, float],
+    batter_pitch: pd.DataFrame,
+    hand_rate: float,
+    shrinkage_pa: float,
+    rate_col: str,
+) -> float:
+    """Arsenal-weighted batter rate vs hand; shrink pitch rows toward hand aggregate."""
+    if not pitch_mix:
+        return hand_rate
+
+    rows = batter_pitch[
+        (batter_pitch["player_id"] == batter_id)
+        & (batter_pitch["hand_split"] == hand)
+    ]
+    weighted = 0.0
+    for pitch_type, mix_w in pitch_mix.items():
+        pt_rows = rows[rows["pitch_type"] == pitch_type]
+        if pt_rows.empty or rate_col not in pt_rows.columns:
+            rate = hand_rate
+        else:
+            row = pt_rows.iloc[0]
+            rate = float(row[rate_col])
+            sample = float(row.get("pa") or row.get("pitches") or 0.0)
+            rate = shrink_rate(rate, sample, hand_rate, shrinkage_pa)
+        weighted += mix_w * rate
+    return weighted
+
+
 def batter_k_vs_pitch_mix(
     batter_id: int,
     hand: str,
@@ -144,26 +175,35 @@ def batter_k_vs_pitch_mix(
     shrinkage_pa: float,
 ) -> float:
     """Arsenal-weighted batter K% vs hand; shrink pitch rows toward batter hand aggregate."""
-    if not pitch_mix:
-        return hand_k
+    return batter_rate_vs_pitch_mix(
+        batter_id,
+        hand,
+        pitch_mix,
+        batter_pitch,
+        hand_k,
+        shrinkage_pa,
+        "k_percent",
+    )
 
-    rows = batter_pitch[
-        (batter_pitch["player_id"] == batter_id)
-        & (batter_pitch["hand_split"] == hand)
-    ]
-    weighted = 0.0
-    for pitch_type, mix_w in pitch_mix.items():
-        pt_rows = rows[rows["pitch_type"] == pitch_type]
-        if pt_rows.empty:
-            k_rate = hand_k
-            sample = 0.0
-        else:
-            row = pt_rows.iloc[0]
-            k_rate = float(row["k_percent"])
-            sample = float(row.get("pa") or row.get("pitches") or 0.0)
-            k_rate = shrink_rate(k_rate, sample, hand_k, shrinkage_pa)
-        weighted += mix_w * k_rate
-    return weighted
+
+def batter_whiff_vs_pitch_mix(
+    batter_id: int,
+    hand: str,
+    pitch_mix: dict[str, float],
+    batter_pitch: pd.DataFrame,
+    hand_whiff: float,
+    shrinkage_pa: float,
+) -> float:
+    """Arsenal-weighted batter whiff% vs hand; shrink pitch rows toward hand aggregate."""
+    return batter_rate_vs_pitch_mix(
+        batter_id,
+        hand,
+        pitch_mix,
+        batter_pitch,
+        hand_whiff,
+        shrinkage_pa,
+        "swing_miss_percent",
+    )
 
 
 def lineup_opponent_profile(
@@ -179,6 +219,7 @@ def lineup_opponent_profile(
     """Average opponent K%, whiff%, chase for today's lineup vs pitcher hand."""
     hand = batter_hand_key(pitcher_throws)
     league_k = float(league.get("k_percent", 22.5))
+    league_whiff = float(league.get("whiff_percent", 25.0))
     subset = batter_hand[
         (batter_hand["hand_split"] == hand)
         & (batter_hand["player_id"].isin(batter_ids))
@@ -189,7 +230,9 @@ def lineup_opponent_profile(
             "opp_k_percent": league_k,
             "opp_k_percent_hand": league_k,
             "opp_k_percent_pitch": league_k,
-            "opp_whiff_percent": league.get("whiff_percent", 25.0),
+            "opp_whiff_percent": league_whiff,
+            "opp_whiff_percent_hand": league_whiff,
+            "opp_whiff_percent_pitch": league_whiff,
             "opp_chase_percent": league.get("o_swing_percent", 31.5),
             "lineup_batters_matched": 0,
         }
@@ -200,6 +243,8 @@ def lineup_opponent_profile(
 
     opp_k_hand = float(subset["k_percent"].mean())
     opp_k_pitch = opp_k_hand
+    opp_whiff_hand = float(subset["swing_miss_percent"].mean())
+    opp_whiff_pitch = opp_whiff_hand
     cfg = pitch_matchup_cfg or {}
     blend = float(cfg.get("blend_weight", 0.55))
     shrinkage_pa = float(cfg.get("shrinkage_pa", 150))
@@ -211,12 +256,18 @@ def lineup_opponent_profile(
         and batter_ids
     ):
         pitch_ks: list[float] = []
-        hand_by_id = {
+        pitch_whiffs: list[float] = []
+        hand_k_by_id = {
             int(row["player_id"]): float(row["k_percent"])
             for _, row in subset.iterrows()
         }
+        hand_whiff_by_id = {
+            int(row["player_id"]): float(row["swing_miss_percent"])
+            for _, row in subset.iterrows()
+        }
         for batter_id in batter_ids:
-            hand_k = hand_by_id.get(batter_id, opp_k_hand)
+            hand_k = hand_k_by_id.get(batter_id, opp_k_hand)
+            hand_whiff = hand_whiff_by_id.get(batter_id, opp_whiff_hand)
             pitch_ks.append(
                 batter_k_vs_pitch_mix(
                     batter_id,
@@ -227,16 +278,31 @@ def lineup_opponent_profile(
                     shrinkage_pa,
                 )
             )
+            pitch_whiffs.append(
+                batter_whiff_vs_pitch_mix(
+                    batter_id,
+                    hand,
+                    pitch_mix,
+                    batter_pitch,
+                    hand_whiff,
+                    shrinkage_pa,
+                )
+            )
         opp_k_pitch = float(sum(pitch_ks) / len(pitch_ks))
         opp_k = blend * opp_k_pitch + (1.0 - blend) * opp_k_hand
+        opp_whiff_pitch = float(sum(pitch_whiffs) / len(pitch_whiffs))
+        opp_whiff = blend * opp_whiff_pitch + (1.0 - blend) * opp_whiff_hand
     else:
         opp_k = opp_k_hand
+        opp_whiff = opp_whiff_hand
 
     return {
         "opp_k_percent": opp_k,
         "opp_k_percent_hand": opp_k_hand,
         "opp_k_percent_pitch": opp_k_pitch,
-        "opp_whiff_percent": float(subset["swing_miss_percent"].mean()),
+        "opp_whiff_percent": opp_whiff,
+        "opp_whiff_percent_hand": opp_whiff_hand,
+        "opp_whiff_percent_pitch": opp_whiff_pitch,
         "opp_chase_percent": chase,
         "lineup_batters_matched": matched,
     }
@@ -296,7 +362,8 @@ def composite_k_percent(
     k_blend = w_plat * k_platoon + w_match * opp_k + w_whiff * k_whiff_skill
 
     chase_edge = (opp_chase - league_chase) / 100.0
-    whiff_edge = (pitcher_skill["whiff_percent"] - league_whiff) / 100.0
+    matchup_whiff = (pitcher_skill["whiff_percent"] + opp_whiff) / 2.0
+    whiff_edge = (matchup_whiff - league_whiff) / 100.0
     chase_adj = 1.0 + chase_weight * chase_edge * whiff_edge
     k_final = k_blend * chase_adj
 
