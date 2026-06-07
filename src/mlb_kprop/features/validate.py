@@ -16,6 +16,8 @@ PLATOON_SOURCE_IDS = (
     "pitcher_L_vs_L",
 )
 PLATOON_SPLITS = ("R_vs_R", "R_vs_L", "L_vs_R", "L_vs_L")
+BATTER_HAND_SPLITS = ("vs_RHP", "vs_LHP")
+BATTER_PITCH_SOURCE_IDS = ("batter_vs_RHP_pitch_type", "batter_vs_LHP_pitch_type")
 
 PLATOON_RAW_REQUIRED = (
     "player_id",
@@ -329,6 +331,65 @@ def validate_daily_data(
             "merge/weighted_k_percent",
             mismatches == 0,
             f"{mismatches} split(s) off by > {weighted_k_tolerance}",
+        )
+
+    batter_hand_path = day_proc / "batter_hand_summary.csv"
+    if not batter_hand_path.exists():
+        _record(report, "processed/batter_hand_summary", False, "file missing")
+    else:
+        bh = pd.read_csv(batter_hand_path)
+        _record(
+            report,
+            "processed/batter_hand_summary",
+            len(bh) > 0,
+            f"{len(bh)} rows",
+        )
+        bad = set(bh.get("hand_split", pd.Series(dtype=str)).unique()) - set(BATTER_HAND_SPLITS)
+        _record(
+            report,
+            "processed/batter_hand_splits",
+            not bad or bh.empty,
+            f"unexpected: {sorted(bad)}" if bad else "ok",
+        )
+
+    batter_pitch_path = day_proc / "batter_platoon_pitch_type.csv"
+    if not batter_pitch_path.exists():
+        _record(report, "processed/batter_platoon_pitch_type", False, "file missing")
+    else:
+        bp = pd.read_csv(batter_pitch_path)
+        _record(
+            report,
+            "processed/batter_platoon_pitch_type",
+            len(bp) > 0,
+            f"{len(bp)} rows",
+        )
+        bad = set(bp.get("hand_split", pd.Series(dtype=str)).unique()) - set(
+            BATTER_HAND_SPLITS
+        )
+        _record(
+            report,
+            "processed/batter_pitch_splits",
+            not bad or bp.empty,
+            f"unexpected: {sorted(bad)}" if bad else "ok",
+        )
+        dup = int(bp.duplicated(["player_id", "hand_split", "pitch_type"]).sum())
+        _record(
+            report,
+            "processed/batter_pitch_no_duplicates",
+            dup == 0,
+            f"{dup} duplicates",
+        )
+
+    skill_path = day_proc / "pitcher_skill.csv"
+    if not skill_path.exists():
+        _record(report, "processed/pitcher_skill", False, "file missing")
+    else:
+        skill = pd.read_csv(skill_path)
+        _record(
+            report,
+            "processed/pitcher_skill",
+            len(skill) > 0,
+            f"{len(skill)} pitchers",
         )
 
     return report

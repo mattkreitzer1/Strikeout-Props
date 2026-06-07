@@ -15,6 +15,7 @@ STARTERS_COLUMNS = [
     "lineup_source",
     "game_status",
     "home_team_abbr",
+    "lineup_batter_ids",
     "notes",
 ]
 
@@ -92,7 +93,7 @@ def load_starters(
         else:
             df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    for col in ("lineup_source", "game_status", "home_team_abbr"):
+    for col in ("lineup_source", "game_status", "home_team_abbr", "lineup_batter_ids"):
         if col not in df.columns:
             df[col] = ""
         else:

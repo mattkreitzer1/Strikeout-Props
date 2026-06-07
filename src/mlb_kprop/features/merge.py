@@ -11,10 +11,10 @@ import pandas as pd
 class MergeOutputs:
     pitcher_merged_long: Path
     pitcher_split_summary: Path
+    pitcher_skill: Path
 
 
 def _weighted_mean(values: pd.Series, weights: pd.Series) -> float:
-    """Pitch-count-weighted average; returns NaN if no valid weights."""
     mask = values.notna() & weights.notna() & (weights > 0)
     if not mask.any():
         return float("nan")
@@ -24,12 +24,6 @@ def _weighted_mean(values: pd.Series, weights: pd.Series) -> float:
 
 
 def _prefix_custom_columns(custom: pd.DataFrame) -> pd.DataFrame:
-    """
-    Rename custom leaderboard columns so they do not collide with platoon stats.
-
-    Platoon `k_percent` is for a (split, pitch_type) row.
-    Custom `k_percent` is season-level overall — different meaning.
-    """
     rename_map = {
         col: f"custom_{col}"
         for col in custom.columns
@@ -38,19 +32,57 @@ def _prefix_custom_columns(custom: pd.DataFrame) -> pd.DataFrame:
     return custom.rename(columns=rename_map)
 
 
+def _build_pitcher_skill(custom: pd.DataFrame) -> pd.DataFrame:
+    """One row per pitcher: PA-weighted season whiff/zone/chase from custom leaderboard."""
+    if custom.empty:
+        return pd.DataFrame(
+            columns=[
+                "player_id",
+                "player_name",
+                "pa_total",
+                "whiff_percent",
+                "zone_percent",
+                "o_swing_percent",
+                "z_swing_percent",
+                "k_percent",
+            ]
+        )
+
+    df = custom.copy()
+    df["pa"] = pd.to_numeric(df["pa"], errors="coerce")
+    df = df[df["pa"] > 0]
+    if df.empty:
+        return pd.DataFrame(columns=["player_id"])
+
+    skill_cols = [
+        "whiff_percent",
+        "zone_percent",
+        "o_swing_percent",
+        "z_swing_percent",
+        "k_percent",
+        "bb_percent",
+        "xwoba",
+    ]
+    rows: list[dict[str, object]] = []
+    for player_id, group in df.groupby("player_id", dropna=False):
+        name = group["player_name"].iloc[0] if "player_name" in group.columns else ""
+        row: dict[str, object] = {
+            "player_id": int(player_id),
+            "player_name": name,
+            "pa_total": int(group["pa"].sum()),
+        }
+        for col in skill_cols:
+            if col in group.columns:
+                row[col] = _weighted_mean(group[col], group["pa"])
+        rows.append(row)
+
+    return pd.DataFrame(rows)
+
+
 def merge_pitcher_features(
     run_date: Date,
     processed_root: Path = Path("data/processed"),
 ) -> MergeOutputs:
-    """
-    Combine platoon pitch-type rows with custom leaderboard context.
-
-    Outputs:
-    1) pitcher_merged_long.csv — one row per (pitcher, platoon_split, pitch_type)
-       with custom columns attached (when that pitcher is in the custom export).
-    2) pitcher_split_summary.csv — one row per (pitcher, platoon_split) with
-       pitch-count-weighted rates across pitch types (platoon emphasis).
-    """
     day_dir = processed_root / run_date.isoformat()
     platoon_path = day_dir / "pitcher_platoon_pitch_type.csv"
     custom_path = day_dir / "pitcher_custom.csv"
@@ -63,7 +95,6 @@ def merge_pitcher_features(
     platoon = pd.read_csv(platoon_path)
     custom = pd.read_csv(custom_path) if custom_path.exists() else pd.DataFrame()
 
-    # --- Long merge: platoon rows + custom context ---
     if not custom.empty:
         custom_prefixed = _prefix_custom_columns(custom)
         merged_long = platoon.merge(
@@ -78,16 +109,13 @@ def merge_pitcher_features(
     merged_long_path = day_dir / "pitcher_merged_long.csv"
     merged_long.to_csv(merged_long_path, index=False)
 
-    # --- Split summary: roll pitch types up per platoon split ---
     summary_rows: list[dict[str, object]] = []
     group_cols = ["player_id", "player_name", "platoon_split"]
-
     rate_cols = ["k_percent", "bb_percent", "xwoba", "swing_miss_percent"]
 
     for keys, group in platoon.groupby(group_cols, dropna=False):
         player_id, player_name, platoon_split = keys
         total_pitches = float(group["pitches"].sum())
-
         row: dict[str, object] = {
             "player_id": player_id,
             "player_name": player_name,
@@ -95,18 +123,21 @@ def merge_pitcher_features(
             "pitch_types_used": int(len(group)),
             "pitches_total": total_pitches,
         }
-
         for col in rate_cols:
             if col in group.columns:
                 row[col] = _weighted_mean(group[col], group["pitches"])
-
         summary_rows.append(row)
 
     split_summary = pd.DataFrame(summary_rows)
     split_summary_path = day_dir / "pitcher_split_summary.csv"
     split_summary.to_csv(split_summary_path, index=False)
 
+    pitcher_skill = _build_pitcher_skill(custom)
+    skill_path = day_dir / "pitcher_skill.csv"
+    pitcher_skill.to_csv(skill_path, index=False)
+
     return MergeOutputs(
         pitcher_merged_long=merged_long_path,
         pitcher_split_summary=split_summary_path,
+        pitcher_skill=skill_path,
     )

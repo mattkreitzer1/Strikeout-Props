@@ -72,7 +72,32 @@ Writes `reports/validation_<date>.txt`. Exits with an error if any check fails (
 
 Raw downloads land in `data/raw/<date>/` (four platoon CSVs plus custom boards when configured).
 
-## Phase 1: Fair strikeout projections (pitcher platoon)
+## Phase 1–2: Fair strikeout projections (matchup model)
+
+Uses platoon splits, **lineup-weighted opponent K%/whiff**, and **Savant zone/chase/whiff** leaderboards.
+
+**Data inputs (auto on `run-daily`):**
+
+| Source | File | Used for |
+|--------|------|----------|
+| Pitcher platoon search | `pitcher_R_vs_L.csv`, etc. | K%, whiff% **by pitch type**, rolled up per platoon split |
+| Batter vs hand search | `batter_vs_RHP.csv`, `batter_vs_LHP.csv` | Opponent K%, whiff% **vs RHP/LHP** (hand aggregate) |
+| Batter vs hand pitch search | `batter_vs_RHP_pitch_type.csv`, `batter_vs_LHP_pitch_type.csv` | Opponent K% **by pitch type vs hand** — weighted by pitcher arsenal |
+| Pitcher custom board | `pitcher_custom_2025_2026.csv` | Season whiff, zone%, chase% |
+| Batter custom board | `batter_custom_2025_2026.csv` | Opponent chase% (attached to lineup profiles) |
+
+**Composite K% formula** (`config/projection_defaults.yaml` → `k_model`):
+
+1. **Platoon (35%)** — pitch-weighted K% + whiff% vs L/R, blended by `opp_lhb_pct`
+2. **Matchup (45%)** — lineup opponent K% vs your hand, blended **55% pitch-matched / 45% hand aggregate** (`pitch_matchup.blend_weight`)
+3. **Whiff skill (20%)** — platoon whiff% scaled to K%
+4. **Chase interaction (8%)** — small boost when high-whiff pitcher meets high-chase lineup
+
+Then: `fair_k = K% × batters_faced × park_factor` (BF from last 3 starts + bullpen rest).
+
+Output columns in `reports/projections_<date>.csv` include `k_percent_platoon`, `opp_k_percent`, `opp_k_percent_hand`, `opp_k_percent_pitch`, `pitcher_whiff_percent`, `pitcher_zone_percent`, and `blend_detail`.
+
+## Phase 1 legacy notes: starters + fair K
 
 Uses `pitcher_split_summary.csv` and `data/starters/<date>.csv` (auto-filled from MLB probables each `run-daily`).
 

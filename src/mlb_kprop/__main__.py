@@ -492,6 +492,8 @@ def _run_build_features(args: CliArgs) -> None:
     print(f"  {outputs.pitcher_platoon_pitch_type}")
     print(f"  {outputs.pitcher_custom}")
     print(f"  {outputs.batter_custom}")
+    print(f"  {outputs.batter_hand_summary}")
+    print(f"  {outputs.batter_platoon_pitch_type}")
 
 
 def _run_validate_data(args: CliArgs) -> None:
@@ -583,6 +585,7 @@ def _run_merge_features(args: CliArgs) -> None:
     print("Wrote merged pitcher files:")
     print(f"  {outputs.pitcher_merged_long}")
     print(f"  {outputs.pitcher_split_summary}")
+    print(f"  {outputs.pitcher_skill}")
 
 
 def _run_send_email(args: CliArgs) -> None:

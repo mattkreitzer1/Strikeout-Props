@@ -40,7 +40,7 @@ def load_sources(config_path: Path) -> list[SavantSource]:
         config = yaml.safe_load(handle)
 
     sources: list[SavantSource] = []
-    for section_name in ("platoon_pitcher", "custom_leaderboard"):
+    for section_name in ("platoon_pitcher", "platoon_batter", "custom_leaderboard"):
         for entry in config.get(section_name, []):
             sources.append(
                 SavantSource(

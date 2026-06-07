@@ -29,6 +29,7 @@ class StarterRow:
     lineup_source: str
     game_status: str
     home_team_abbr: str
+    lineup_batter_ids: str
     notes: str
 
 
@@ -193,9 +194,11 @@ def build_starters_for_date(
             savant_name = mlb_full_name_to_savant(probable.get("fullName", ""))
             throws = client.pitcher_throws_code(pid)
             opp_team_id = int(batting_team["team"]["id"])
+            lineup_ids = orders.get(batting_side, [])
+            lineup_str = "|".join(str(b) for b in lineup_ids)
 
             opp_lhb = client.opp_lhb_pct_for_lineup(
-                orders.get(batting_side, []),
+                lineup_ids,
                 throws,
             )
             lineup_source = "lineup"
@@ -214,6 +217,7 @@ def build_starters_for_date(
                     lineup_source=lineup_source,
                     game_status=game_status,
                     home_team_abbr=home_abbr,
+                    lineup_batter_ids=lineup_str,
                     notes=f"{matchup} | opp_lhb_{lineup_source}",
                 )
             )
@@ -253,6 +257,7 @@ def sync_starters_from_mlb(
                 "lineup_source": row.lineup_source,
                 "game_status": row.game_status,
                 "home_team_abbr": row.home_team_abbr,
+                "lineup_batter_ids": row.lineup_batter_ids,
                 "notes": row.notes,
             }
             for row in starter_rows

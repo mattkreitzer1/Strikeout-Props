@@ -186,11 +186,14 @@ def run_daily(
     print(f"  {build_outputs.pitcher_platoon_pitch_type}")
     print(f"  {build_outputs.pitcher_custom}")
     print(f"  {build_outputs.batter_custom}")
+    print(f"  {build_outputs.batter_hand_summary}")
+    print(f"  {build_outputs.batter_platoon_pitch_type}")
 
     print("\nStep 3: Merge pitcher platoon + custom...")
     merge_outputs = merge_pitcher_features(run_date=run_date)
     print(f"  {merge_outputs.pitcher_merged_long}")
     print(f"  {merge_outputs.pitcher_split_summary}")
+    print(f"  {merge_outputs.pitcher_skill}")
 
     print("\nStep 4: Validate raw + processed files...")
     report = validate_daily_data(
