@@ -5,6 +5,9 @@ summary_path: data/tracker/summary.txt
 daily_rollup_path: data/tracker/daily_rollup.csv
 ev_rollup_path: data/tracker/ev_rollup.csv
 
+# Tag picks so rollups stay tied to a model era (Phase 2 + calibration + pitch splits).
+model_version: phase2_v1
+
 # Only track rows that were flagged in value-props (respects min_edge there).
 track_pass_rows: false
 

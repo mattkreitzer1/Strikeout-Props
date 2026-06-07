@@ -26,6 +26,7 @@ LEDGER_COLUMNS = [
     "actual_k",
     "result",
     "profit_units",
+    "model_version",
     "recorded_at",
     "graded_at",
 ]
@@ -115,7 +116,15 @@ def _load_ledger(path: Path) -> pd.DataFrame:
     for col in LEDGER_COLUMNS:
         if col not in df.columns:
             df[col] = pd.NA
-    for col in ("slate_date", "player_name", "pick", "result", "recorded_at", "graded_at"):
+    for col in (
+        "slate_date",
+        "player_name",
+        "pick",
+        "result",
+        "model_version",
+        "recorded_at",
+        "graded_at",
+    ):
         df[col] = df[col].apply(lambda v: pd.NA if pd.isna(v) else str(v))
     return df[LEDGER_COLUMNS]
 
@@ -163,6 +172,7 @@ def record_picks_from_value(
     run_date: Date,
     value_csv: Path,
     ledger_path: Path,
+    model_version: str = "phase2_v1",
 ) -> int:
     """Append flagged plays from value_<date>.csv to the ledger."""
     if not value_csv.exists():
@@ -205,6 +215,7 @@ def record_picks_from_value(
                 "actual_k": pd.NA,
                 "result": "PENDING",
                 "profit_units": pd.NA,
+                "model_version": model_version,
                 "recorded_at": now,
                 "graded_at": pd.NA,
             }
@@ -329,12 +340,16 @@ def build_ev_bucket_rollup(
 def build_summary_text(
     ledger: pd.DataFrame,
     buckets: list[EvBucket] | None = None,
+    model_version: str | None = None,
 ) -> str:
     graded = ledger[ledger["result"].isin(["WIN", "LOSS", "PUSH"])].copy()
     pending = ledger[ledger["result"] == "PENDING"]
     bucket_defs = buckets or ev_buckets_from_config({})
 
     lines = ["MLB K prop tracker — performance history", ""]
+    if model_version:
+        lines.append(f"Model era: {model_version}")
+        lines.append("")
 
     if graded.empty:
         lines.append("No graded plays yet.")
@@ -428,9 +443,15 @@ def track_performance(
     buckets = ev_buckets_from_config(cfg)
 
     value_csv = value_path or reports_root / f"value_{run_date.isoformat()}.csv"
+    model_version = str(cfg.get("model_version", "phase2_v1"))
     picks_recorded = 0
     if record_today:
-        picks_recorded = record_picks_from_value(run_date, value_csv, ledger_path)
+        picks_recorded = record_picks_from_value(
+            run_date,
+            value_csv,
+            ledger_path,
+            model_version=model_version,
+        )
 
     picks_graded = 0
     if grade_pending:
@@ -440,7 +461,10 @@ def track_performance(
     pending_count = int((ledger["result"] == "PENDING").sum())
 
     summary_path.parent.mkdir(parents=True, exist_ok=True)
-    summary_path.write_text(build_summary_text(ledger, buckets), encoding="utf-8")
+    summary_path.write_text(
+        build_summary_text(ledger, buckets, model_version=model_version),
+        encoding="utf-8",
+    )
 
     rollup = build_daily_rollup(ledger)
     rollup_path.parent.mkdir(parents=True, exist_ok=True)
