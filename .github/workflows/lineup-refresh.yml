@@ -1,24 +1,24 @@
-# MORNING RUN (~11 AM US/Eastern): Savant → features → early EV preview email.
-# Use this when manually triggering before lineups are confirmed.
-# For final plays after lineups post, run "Afternoon — confirmed FINAL" instead.
+# AFTERNOON / FINAL RUN (~4 PM US/Eastern): confirmed lineups → final EV → tracker picks.
+# This is the run to use (or wait for) before placing bets.
+# Day games may already be started and are skipped.
 
-name: Morning — early preview (~11 AM ET)
+name: Afternoon — confirmed FINAL (~4 PM ET)
 
 on:
   schedule:
-    # 15:00 UTC ≈ 11:00 AM EDT / 10:00 AM EST (GitHub cron is UTC-only)
-    - cron: "0 15 * * *"
+    # 20:00 UTC ≈ 4:00 PM EDT / 3:00 PM EST
+    - cron: "0 20 * * *"
   workflow_dispatch:
     inputs:
       run_date:
-        description: "MORNING preview — Savant + early EV (lineups may not be final). Date YYYY-MM-DD; blank = today ET."
+        description: "FINAL plays — confirmed lineups + tracker recording. Date YYYY-MM-DD; blank = today ET."
         required: false
         type: string
 
 jobs:
-  run-daily:
+  lineup-refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 45
     permissions:
       contents: write
 
@@ -48,10 +48,10 @@ jobs:
           echo "RUN_DATE=${RUN_DATE}" >> "$GITHUB_ENV"
           echo "run_date=${RUN_DATE}" >> "$GITHUB_OUTPUT"
 
-      - name: Run daily pipeline
-        run: python -m mlb_kprop run-daily --date "$RUN_DATE" --run-mode early
+      - name: Run lineup refresh (confirmed lineups)
+        run: python -m mlb_kprop run-lineup-refresh --date "$RUN_DATE" --run-mode confirmed
 
-      - name: Email early digest
+      - name: Email confirmed digest
         if: success()
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
@@ -60,7 +60,7 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-        run: python -m mlb_kprop send-email --date "$RUN_DATE" --run-mode early
+        run: python -m mlb_kprop send-email --date "$RUN_DATE" --run-mode confirmed
 
       - name: Commit performance tracker
         if: success()
@@ -71,25 +71,21 @@ jobs:
           if git diff --staged --quiet; then
             echo "No tracker changes to commit."
           else
-            git commit -m "Update K prop performance tracker for ${RUN_DATE}"
+            git commit -m "Update K prop tracker (confirmed) for ${RUN_DATE}"
             git push
           fi
 
-      - name: Upload daily artifacts
+      - name: Upload refresh artifacts
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: kprop-${{ steps.date.outputs.run_date }}
+          name: kprop-confirmed-${{ steps.date.outputs.run_date }}
           retention-days: 14
           path: |
             reports/value_${{ steps.date.outputs.run_date }}.csv
             reports/projections_${{ steps.date.outputs.run_date }}.csv
-            reports/validation_${{ steps.date.outputs.run_date }}.txt
-            reports/savant_fetch_${{ steps.date.outputs.run_date }}.csv
             data/starters/${{ steps.date.outputs.run_date }}.csv
             data/lines/${{ steps.date.outputs.run_date }}.csv
             data/tracker/ledger.csv
-            data/tracker/daily_rollup.csv
-            data/tracker/ev_rollup.csv
             data/tracker/summary.txt
           if-no-files-found: warn

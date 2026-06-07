@@ -73,6 +73,31 @@ def no_vig_probs(implied_over: float, implied_under: float) -> tuple[float, floa
     return implied_over / total, implied_under / total
 
 
+def _run_guards(cfg: dict[str, Any], run_mode: str) -> dict[str, Any]:
+    section_key = "confirmed_run" if run_mode == "confirmed" else "early_run"
+    section = cfg.get(section_key) or {}
+    return {
+        "max_ev": float(section.get("max_ev", cfg.get("max_ev", 0.35))),
+        "max_fair_k_book_gap": float(
+            section.get("max_fair_k_book_gap", cfg.get("max_fair_k_book_gap", 1.75))
+        ),
+        "require_lineup_source": section.get("require_lineup_source"),
+        "skip_started_games": bool(section.get("skip_started_games", False)),
+    }
+
+
+def _model_sigma(base_sigma: float, proj: pd.Series, cfg: dict[str, Any]) -> float:
+    sigma = base_sigma
+    if str(proj.get("lineup_source", "")) == "default":
+        sigma += float(cfg.get("sigma_lineup_default_add", 0.35))
+    bf_std = proj.get("recent_bf_std")
+    if pd.notna(bf_std):
+        sigma += float(bf_std) * float(cfg.get("sigma_bf_std_multiplier", 0.08))
+    sigma_min = float(cfg.get("k_sigma_min", base_sigma))
+    sigma_max = float(cfg.get("k_sigma_max", base_sigma))
+    return max(sigma_min, min(sigma_max, sigma))
+
+
 def _match_projection_row(
     line_row: pd.Series,
     projections: pd.DataFrame,
@@ -97,12 +122,40 @@ def _pick_side(
     edge_over: float,
     edge_under: float,
     min_edge: float,
-) -> str:
-    if edge_over >= min_edge and edge_over >= edge_under:
-        return "OVER"
-    if edge_under >= min_edge and edge_under > edge_over:
-        return "UNDER"
-    return "PASS"
+    ev_over: float,
+    ev_under: float,
+    fair_k: float,
+    book_line: float,
+    guards: dict[str, Any],
+    lineup_source: str,
+    game_status: str,
+) -> tuple[str, str]:
+    """Return (pick, pass_reason). pick is PASS when filtered out."""
+    if guards.get("skip_started_games") and game_status in ("Live", "Final"):
+        return "PASS", "game_started"
+
+    required_lineup = guards.get("require_lineup_source")
+    if required_lineup and lineup_source != required_lineup:
+        return "PASS", f"lineup_{lineup_source or 'unknown'}"
+
+    max_ev = float(guards.get("max_ev", 1.0))
+    max_gap = float(guards.get("max_fair_k_book_gap", 99.0))
+
+    candidates: list[tuple[str, float, float, float]] = []
+    if edge_over >= min_edge:
+        candidates.append(("OVER", edge_over, ev_over, abs(fair_k - book_line)))
+    if edge_under >= min_edge:
+        candidates.append(("UNDER", edge_under, ev_under, abs(fair_k - book_line)))
+
+    if not candidates:
+        return "PASS", "below_min_edge"
+
+    pick, edge, ev, gap = max(candidates, key=lambda row: row[1])
+    if ev > max_ev:
+        return "PASS", f"ev_cap({ev:.0%})"
+    if gap > max_gap:
+        return "PASS", f"fair_book_gap({gap:.1f})"
+    return pick, ""
 
 
 def value_props(
@@ -112,14 +165,18 @@ def value_props(
     lines_path: Path | None = None,
     projections_path: Path | None = None,
     config_path: Path = DEFAULT_CONFIG_PATH,
+    run_mode: str = "early",
 ) -> ValueOutputs:
     """
     Merge projections with book lines; compute model vs implied prob and EV.
+
+    run_mode: "early" (morning) or "confirmed" (afternoon lineup refresh).
     """
     cfg = load_value_config(config_path)
-    sigma = float(cfg.get("k_sigma", 1.75))
+    base_sigma = float(cfg.get("k_sigma", 2.25))
     min_edge = float(cfg.get("min_edge", 0.03))
     use_no_vig = bool(cfg.get("use_no_vig_implied", True))
+    guards = _run_guards(cfg, run_mode)
 
     proj_path = projections_path or (
         reports_root / f"projections_{run_date.isoformat()}.csv"
@@ -149,6 +206,9 @@ def value_props(
         over_odds = float(line_row["over_odds"])
         under_odds = float(line_row["under_odds"])
         fair_k = float(proj["fair_k"])
+        sigma = _model_sigma(base_sigma, proj, cfg)
+        lineup_source = str(proj.get("lineup_source", ""))
+        game_status = str(proj.get("game_status", ""))
 
         p_over = model_prob_over(book_line, fair_k, sigma)
         p_under = model_prob_under(book_line, fair_k, sigma)
@@ -164,6 +224,18 @@ def value_props(
         edge_under = p_under - fair_impl_under
         ev_over = expected_value(p_over, over_odds)
         ev_under = expected_value(p_under, under_odds)
+        pick, pass_reason = _pick_side(
+            edge_over,
+            edge_under,
+            min_edge,
+            ev_over,
+            ev_under,
+            fair_k,
+            book_line,
+            guards,
+            lineup_source,
+            game_status,
+        )
 
         rows.append(
             {
@@ -172,7 +244,11 @@ def value_props(
                 "fair_k": round(fair_k, 3),
                 "fair_k_line": proj.get("fair_k_line", ""),
                 "book_line": book_line,
-                "k_sigma": sigma,
+                "batters_faced": proj.get("batters_faced", ""),
+                "lineup_source": lineup_source,
+                "game_status": game_status,
+                "k_sigma": round(sigma, 3),
+                "run_mode": run_mode,
                 "model_p_over": round(p_over, 4),
                 "model_p_under": round(p_under, 4),
                 "implied_p_over": round(impl_over, 4),
@@ -185,7 +261,8 @@ def value_props(
                 "ev_under": round(ev_under, 4),
                 "over_odds": int(over_odds),
                 "under_odds": int(under_odds),
-                "pick": _pick_side(edge_over, edge_under, min_edge),
+                "pick": pick,
+                "pass_reason": pass_reason or "",
             }
         )
 

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from mlb_kprop.pipeline.daily import run_daily
+from mlb_kprop.pipeline.daily import run_daily, run_lineup_refresh
 from mlb_kprop.savant.fetch import fetch_all_sources, write_fetch_manifest
 from mlb_kprop.features.build import build_features
 from mlb_kprop.features.merge import merge_pitcher_features
@@ -51,6 +51,7 @@ class CliArgs:
     tracker_config: Path = Path("config/tracker_defaults.yaml")
     no_record: bool = False
     no_grade: bool = False
+    run_mode: str = "early"
     dry_run: bool = False
 
 
@@ -180,6 +181,76 @@ def _parse_args() -> CliArgs:
         type=Path,
         default=Path("config/value_defaults.yaml"),
         help="EV / edge defaults.",
+    )
+    run_daily_parser.add_argument(
+        "--run-mode",
+        choices=("early", "confirmed"),
+        default="early",
+        help="early = morning (stricter EV caps); confirmed = post-lineup refresh.",
+    )
+
+    refresh_parser = subparsers.add_parser(
+        "run-lineup-refresh",
+        help="Afternoon refresh: lineups + projections + EV (skips Savant).",
+    )
+    add_shared_options(refresh_parser)
+    refresh_parser.add_argument(
+        "--out-dir",
+        type=Path,
+        default=Path("reports"),
+        help="Folder for projections and value CSVs.",
+    )
+    refresh_parser.add_argument(
+        "--lines-root",
+        type=Path,
+        default=Path("data/lines"),
+        help="Folder for daily sportsbook line CSVs.",
+    )
+    refresh_parser.add_argument(
+        "--starters-root",
+        type=Path,
+        default=Path("data/starters"),
+        help="Folder for daily starter CSVs.",
+    )
+    refresh_parser.add_argument(
+        "--oddstrader-config",
+        type=Path,
+        default=Path("config/oddstrader.yaml"),
+        help="OddsTrader market id, sportsbook paid id, URLs.",
+    )
+    refresh_parser.add_argument(
+        "--mlb-config",
+        type=Path,
+        default=Path("config/mlb_defaults.yaml"),
+        help="MLB API defaults.",
+    )
+    refresh_parser.add_argument(
+        "--projection-config",
+        type=Path,
+        default=Path("config/projection_defaults.yaml"),
+        help="Fair K projection defaults.",
+    )
+    refresh_parser.add_argument(
+        "--value-config",
+        type=Path,
+        default=Path("config/value_defaults.yaml"),
+        help="EV / edge defaults.",
+    )
+    refresh_parser.add_argument(
+        "--run-mode",
+        choices=("early", "confirmed"),
+        default="confirmed",
+        help="Use confirmed mode (requires posted lineups for picks).",
+    )
+    refresh_parser.add_argument(
+        "--skip-odds",
+        action="store_true",
+        help="Skip OddsTrader refresh and value-props.",
+    )
+    refresh_parser.add_argument(
+        "--no-track-record",
+        action="store_true",
+        help="Grade pending picks only; do not record new picks.",
     )
 
     init_starters_parser = subparsers.add_parser(
@@ -327,6 +398,12 @@ def _parse_args() -> CliArgs:
         action="store_true",
         help="Print the email instead of sending.",
     )
+    send_email_parser.add_argument(
+        "--run-mode",
+        choices=("early", "confirmed"),
+        default="early",
+        help="Controls subject line (early vs confirmed lineups).",
+    )
 
     track_parser = subparsers.add_parser(
         "track-performance",
@@ -389,6 +466,7 @@ def _parse_args() -> CliArgs:
         ),
         no_record=getattr(ns, "no_record", False),
         no_grade=getattr(ns, "no_grade", False),
+        run_mode=getattr(ns, "run_mode", "early"),
         dry_run=getattr(ns, "dry_run", False),
     )
 
@@ -513,6 +591,23 @@ def _run_send_email(args: CliArgs) -> None:
         reports_root=args.out_dir,
         config_path=args.email_config,
         dry_run=args.dry_run,
+        run_mode=args.run_mode,
+    )
+
+
+def _run_lineup_refresh(args: CliArgs) -> None:
+    run_lineup_refresh(
+        run_date=args.date,
+        out_dir=args.out_dir,
+        lines_root=args.lines_root,
+        starters_root=args.starters_root,
+        oddstrader_config=args.oddstrader_config,
+        mlb_config=args.mlb_config,
+        projection_config=args.projection_config,
+        value_config=args.value_config,
+        fetch_odds=not args.skip_odds,
+        run_mode=args.run_mode,
+        record_tracker_picks=not getattr(args, "no_track_record", False),
     )
 
 
@@ -568,7 +663,12 @@ def main() -> None:
             value_config=args.value_config,
             fetch_odds=not args.skip_odds,
             run_model=not args.skip_model,
+            run_mode=args.run_mode,
         )
+        return
+
+    if args.command == "run-lineup-refresh":
+        _run_lineup_refresh(args)
         return
 
     if args.command == "init-starters":

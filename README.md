@@ -100,8 +100,13 @@ python -m mlb_kprop init-starters
 | `player_name` | e.g. `Verlander, Justin` |
 | `pitcher_throws` | `R` or `L` (leave blank to auto-guess from splits) |
 | `opp_lhb_pct` | Share of opposing batters who bat **left** (0.42 = 42% LHB) |
-| `batters_faced` | Expected batters (blank = 24 from config) |
+| `batters_faced` | Optional override (blank = workload model: last 3 starts + bullpen rest) |
+| `lineup_source` | `lineup` (confirmed order) or `default` (40% LHB fallback) |
 | `notes` | Optional |
+
+**Expected batters faced** (when blank): blends the pitcher's last **3 starts** (MLB game log) with a default and adjusts for **opponent bullpen usage the prior night** — tired pen → starter may go deeper (+BF). Config: `config/projection_defaults.yaml` → `batters_faced_model`.
+
+Fair K also applies **K% shrinkage** toward league average and **park factors** (`config/park_factors.yaml`).
 
 **3. Score fair K:**
 
@@ -111,7 +116,7 @@ python -m mlb_kprop score-projections
 
 Output: `reports/projections_<date>.csv` with `fair_k` and `fair_k_line` (rounded to nearest 0.5).
 
-Formula: `fair_k = (blended K% / 100) × batters_faced`, where blended K% weights `R_vs_L` / `R_vs_R` (or `L_vs_*` for lefties) by `opp_lhb_pct`.
+Formula: `fair_k = (blended K% / 100) × batters_faced × park_factor`, where blended K% weights platoon splits by `opp_lhb_pct` (with shrinkage).
 
 Tweak defaults in `config/projection_defaults.yaml`.
 
@@ -157,6 +162,28 @@ python -m mlb_kprop value-props
 Output: `reports/value_<date>.csv` with model vs no-vig implied probability, **edge**, **EV**, and a **pick** (`OVER` / `UNDER` / `PASS`).
 
 Tweak the normal spread around `fair_k` in `config/value_defaults.yaml` (`k_sigma`, `min_edge`).
+
+Tweak the normal spread around `fair_k` in `config/value_defaults.yaml` (`k_sigma`, `min_edge`, `max_ev`, `max_fair_k_book_gap`). **Early** vs **confirmed** run modes apply different guardrails (`early_run` / `confirmed_run` sections).
+
+### Two-run schedule (confirmed lineups)
+
+Lineups usually post a few hours before first pitch, so the project runs **twice**:
+
+| Run | GitHub Actions workflow | Email subject |
+|-----|-------------------------|---------------|
+| **Morning preview** | **Morning — early preview (~11 AM ET)** | `MLB K props (early) — {date}` |
+| **Final (bet this)** | **Afternoon — confirmed FINAL (~4 PM ET)** | `MLB K props (confirmed lineups) — {date}` |
+
+In the Actions tab you'll see two separate workflows — always use **Afternoon — confirmed FINAL** for the sheet you'd actually bet. The morning email is a preview only (stricter EV caps, lineups often not posted yet).
+
+The afternoon run skips Savant (uses morning features), re-syncs **confirmed** batting orders, refreshes odds, and **records picks to the tracker**. Day games may already be underway at 4 PM — those are skipped in confirmed mode (`skip_started_games`).
+
+Manual refresh:
+
+```bash
+python -m mlb_kprop run-lineup-refresh --date 2026-05-30
+python -m mlb_kprop send-email --date 2026-05-30 --run-mode confirmed
+```
 
 ### Full daily betting workflow
 
@@ -284,7 +311,7 @@ python -m mlb_kprop send-email --date 2026-05-30             # send
 
 ## Performance tracker (high-EV plays)
 
-Every `run-daily` records flagged plays (`pick` = OVER or UNDER in the value sheet) into a persistent ledger and grades them once MLB box scores are final. Grading uses actual strikeouts from the MLB Stats API vs the book line at bet time (flat 1-unit stakes, profit from the American odds on the pick).
+Every **confirmed** afternoon run records flagged plays into the ledger; the morning early run only grades pending rows (no new picks).
 
 Outputs (committed by GitHub Actions so history survives between runs):
 

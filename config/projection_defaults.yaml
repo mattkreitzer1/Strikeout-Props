@@ -1,6 +1,6 @@
 # Defaults for Phase 1 fair strikeout projections (pitcher platoon splits only).
 
-# Typical starters see ~22–26 batters; tweak per pitcher in starters CSV.
+# Fallback when workload model cannot run (overridden by batters_faced_model).
 default_batters_faced: 24
 
 # Round fair K to nearest half-strikeout for comparison to sportsbook lines (5.5, 6.0, …).
@@ -11,3 +11,23 @@ infer_pitcher_throws_from_splits: true
 
 # Minimum total pitches in a split row to use it when inferring handedness.
 min_pitches_for_hand_inference: 50
+
+# Shrink platoon K% toward league average (more weight as sample grows).
+league_k_percent: 22.0
+k_shrinkage_pitches: 400
+
+# Expected batters faced: blend recent starts + default + bullpen-rest adjustment.
+batters_faced_model:
+  recent_starts_count: 3
+  recent_weight: 0.55
+  default_weight: 0.25
+  bullpen_weight: 0.20
+  min_bf: 18
+  max_bf: 30
+  bullpen_high_ip: 4.0
+  bullpen_low_ip: 2.0
+  bullpen_bf_adjust_high: 1.5
+  bullpen_bf_adjust_low: -1.0
+  bullpen_lookback_days: 4
+
+park_factors_path: config/park_factors.yaml

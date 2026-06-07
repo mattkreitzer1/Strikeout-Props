@@ -8,6 +8,8 @@ from typing import Any
 import pandas as pd
 import yaml
 
+from mlb_kprop.mlb.starters import MlbStatsClient, load_mlb_config
+from mlb_kprop.mlb.workload import predict_batters_faced
 from mlb_kprop.projections.names import match_player_name
 from mlb_kprop.projections.starters import load_starters
 
@@ -72,11 +74,44 @@ def infer_pitcher_throws(
     return "R" if r_pitches >= l_pitches else "L"
 
 
+def load_park_factors(config: dict[str, Any]) -> dict[str, float]:
+    path = Path(config.get("park_factors_path", "config/park_factors.yaml"))
+    if not path.exists():
+        return {"default": 1.0}
+    with path.open(encoding="utf-8") as handle:
+        raw = yaml.safe_load(handle) or {}
+    teams = raw.get("teams") or {}
+    factors = {str(k): float(v) for k, v in teams.items()}
+    factors.setdefault("default", 1.0)
+    return factors
+
+
+def shrink_k_percent(
+    k_percent: float,
+    pitches_sample: float,
+    league_k: float,
+    shrinkage_pitches: float,
+) -> float:
+    if shrinkage_pitches <= 0:
+        return k_percent
+    weight = pitches_sample / (pitches_sample + shrinkage_pitches)
+    return league_k + weight * (k_percent - league_k)
+
+
+def _split_pitch_sample(summary: pd.DataFrame, player_id: int, split: str) -> float:
+    row = _split_lookup(summary, player_id, split)
+    if row is None:
+        return 0.0
+    return float(row.get("pitches_total") or 0)
+
+
 def blend_platoon_k_percent(
     summary: pd.DataFrame,
     player_id: int,
     pitcher_throws: str,
     opp_lhb_pct: float,
+    league_k: float = 22.0,
+    shrinkage_pitches: float = 400.0,
 ) -> tuple[float, str]:
     """
     Weight K% by expected share of LHB vs RHB faced.
@@ -101,12 +136,34 @@ def blend_platoon_k_percent(
         )
 
     if row_l is None:
-        return float(row_r["k_percent"]), vs_rhb
+        k = shrink_k_percent(
+            float(row_r["k_percent"]),
+            _split_pitch_sample(summary, player_id, vs_rhb),
+            league_k,
+            shrinkage_pitches,
+        )
+        return k, vs_rhb
     if row_r is None:
-        return float(row_l["k_percent"]), vs_lhb
+        k = shrink_k_percent(
+            float(row_l["k_percent"]),
+            _split_pitch_sample(summary, player_id, vs_lhb),
+            league_k,
+            shrinkage_pitches,
+        )
+        return k, vs_lhb
 
-    k_l = float(row_l["k_percent"])
-    k_r = float(row_r["k_percent"])
+    k_l = shrink_k_percent(
+        float(row_l["k_percent"]),
+        _split_pitch_sample(summary, player_id, vs_lhb),
+        league_k,
+        shrinkage_pitches,
+    )
+    k_r = shrink_k_percent(
+        float(row_r["k_percent"]),
+        _split_pitch_sample(summary, player_id, vs_rhb),
+        league_k,
+        shrinkage_pitches,
+    )
     blended = opp_lhb_pct * k_l + (1.0 - opp_lhb_pct) * k_r
     blend_label = f"{opp_lhb_pct:.0%}*{vs_lhb} + {1-opp_lhb_pct:.0%}*{vs_rhb}"
     return blended, blend_label
@@ -148,6 +205,11 @@ def score_projections(
     round_half = bool(cfg.get("round_fair_k_to_half", True))
     infer_hand = bool(cfg.get("infer_pitcher_throws_from_splits", True))
     min_pitches_infer = float(cfg.get("min_pitches_for_hand_inference", 50))
+    league_k = float(cfg.get("league_k_percent", 22.0))
+    shrinkage_pitches = float(cfg.get("k_shrinkage_pitches", 400))
+    park_factors = load_park_factors(cfg)
+    mlb_cfg = load_mlb_config()
+    stats_client = MlbStatsClient(mlb_cfg)
 
     day_proc = processed_root / run_date.isoformat()
     summary_path = day_proc / "pitcher_split_summary.csv"
@@ -193,17 +255,47 @@ def score_projections(
         opp_lhb = float(max(0.0, min(1.0, opp_lhb)))
 
         bf = starter.get("batters_faced")
-        batters_faced = int(bf) if pd.notna(bf) and bf > 0 else default_bf
+        bf_detail = ""
+        recent_bf_std = pd.NA
+        if pd.notna(bf) and bf > 0:
+            batters_faced = int(bf)
+            bf_detail = "manual"
+        else:
+            opp_team_id = starter.get("opp_team_id")
+            if pd.notna(opp_team_id):
+                bf_pred = predict_batters_faced(
+                    stats_client,
+                    pitcher_id=int(player_id),
+                    opp_team_id=int(opp_team_id),
+                    run_date=run_date,
+                    config=cfg,
+                )
+                batters_faced = bf_pred.batters_faced
+                bf_detail = bf_pred.detail
+                recent_bf_std = bf_pred.recent_bf_std
+            else:
+                batters_faced = default_bf
+                bf_detail = f"default_{default_bf}bf"
+
+        lineup_source = str(starter.get("lineup_source") or "")
+        game_status = str(starter.get("game_status") or "")
+        home_abbr = str(starter.get("home_team_abbr") or "")
+        park_factor = float(park_factors.get(home_abbr, park_factors.get("default", 1.0)))
 
         try:
             k_blend, blend_detail = blend_platoon_k_percent(
-                summary, player_id, str(throws), opp_lhb
+                summary,
+                player_id,
+                str(throws),
+                opp_lhb,
+                league_k=league_k,
+                shrinkage_pitches=shrinkage_pitches,
             )
         except ValueError as exc:
             errors.append(f"{name}: {exc}")
             continue
 
-        fair_k = (k_blend / 100.0) * batters_faced
+        fair_k = (k_blend / 100.0) * batters_faced * park_factor
         fair_k_book = _round_to_half(fair_k) if round_half else fair_k
 
         rows.append(
@@ -212,7 +304,13 @@ def score_projections(
                 "player_name": name,
                 "pitcher_throws": throws,
                 "opp_lhb_pct": opp_lhb,
+                "lineup_source": lineup_source,
+                "game_status": game_status,
                 "batters_faced": batters_faced,
+                "bf_detail": bf_detail,
+                "recent_bf_std": recent_bf_std,
+                "park_factor": round(park_factor, 3),
+                "home_team_abbr": home_abbr,
                 "k_percent_blended": round(k_blend, 3),
                 "blend_detail": blend_detail,
                 "fair_k": round(fair_k, 3),

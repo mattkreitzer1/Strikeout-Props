@@ -102,6 +102,7 @@ def send_daily_digest(
     value_path: Path | None = None,
     config_path: Path = DEFAULT_CONFIG_PATH,
     dry_run: bool = False,
+    run_mode: str = "early",
 ) -> EmailDigestOutputs | None:
     """
     Email today's flagged K prop plays.
@@ -140,6 +141,14 @@ def send_daily_digest(
     body, play_count = build_digest_body(run_date, value_df, max_plays)
 
     subject_template = str(cfg.get("subject", "MLB K props — {date}"))
+    if run_mode == "confirmed":
+        subject_template = str(
+            cfg.get("subject_confirmed", "MLB K props (confirmed lineups) — {date}")
+        )
+    elif run_mode == "early":
+        subject_template = str(
+            cfg.get("subject_early", "MLB K props (early) — {date}")
+        )
     subject = subject_template.format(date=run_date.isoformat())
 
     msg = EmailMessage()

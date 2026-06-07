@@ -11,6 +11,10 @@ STARTERS_COLUMNS = [
     "pitcher_throws",
     "opp_lhb_pct",
     "batters_faced",
+    "opp_team_id",
+    "lineup_source",
+    "game_status",
+    "home_team_abbr",
     "notes",
 ]
 
@@ -81,6 +85,18 @@ def load_starters(
 
     if "batters_faced" in df.columns:
         df["batters_faced"] = pd.to_numeric(df["batters_faced"], errors="coerce")
+
+    for col in ("opp_team_id",):
+        if col not in df.columns:
+            df[col] = pd.NA
+        else:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    for col in ("lineup_source", "game_status", "home_team_abbr"):
+        if col not in df.columns:
+            df[col] = ""
+        else:
+            df[col] = df[col].fillna("").astype(str).str.strip()
 
     if "pitcher_throws" in df.columns:
         df["pitcher_throws"] = (
