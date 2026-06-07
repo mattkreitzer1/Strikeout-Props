@@ -1,0 +1,56 @@
+# Defaults for Phase 1 fair strikeout projections (pitcher platoon splits only).
+
+# Fallback when workload model cannot run (overridden by batters_faced_model).
+default_batters_faced: 24
+
+# Round fair K to nearest half-strikeout for comparison to sportsbook lines (5.5, 6.0, …).
+round_fair_k_to_half: true
+
+# If pitcher_throws is blank in starters CSV, infer R/L from which split has more pitches.
+infer_pitcher_throws_from_splits: true
+
+# Minimum total pitches in a split row to use it when inferring handedness.
+min_pitches_for_hand_inference: 50
+
+# Shrink platoon K% toward league average (more weight as sample grows).
+league_k_percent: 22.5
+k_shrinkage_pitches: 500
+
+# Expected batters faced: blend recent starts + default + bullpen-rest adjustment.
+batters_faced_model:
+  recent_starts_count: 3
+  recent_weight: 0.55
+  default_weight: 0.25
+  bullpen_weight: 0.20
+  min_bf: 18
+  max_bf: 30
+  bullpen_high_ip: 4.0
+  bullpen_low_ip: 2.0
+  bullpen_bf_adjust_high: 1.5
+  bullpen_bf_adjust_low: -1.0
+  bullpen_lookback_days: 4
+
+park_factors_path: config/park_factors.yaml
+
+# Phase 2 composite K% model (platoon + lineup opponent + whiff/chase skill).
+# Weights tuned to lean on lineup matchup + whiff (not platoon K% alone).
+k_model:
+  platoon_weight: 0.35
+  matchup_weight: 0.45
+  whiff_weight: 0.20
+  chase_interaction_weight: 0.08
+
+# Pitch-matched lineup K%: blend arsenal-weighted batter splits with hand aggregate.
+# Keeps signal from slider-heavy matchups without overfitting sparse pitch samples.
+pitch_matchup:
+  blend_weight: 0.55
+  min_pitches_per_batter_pitch_row: 75
+  shrinkage_pa: 150
+
+# League-average baselines for shrinkage and fallback (2025–26 MLB-ish).
+league_rates:
+  k_percent: 22.5
+  whiff_percent: 25.0
+  o_swing_percent: 31.5
+  zone_percent: 49.5
+  z_swing_percent: 66.0

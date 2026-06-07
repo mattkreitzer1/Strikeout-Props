@@ -1,0 +1,9 @@
+# Multiplier on fair_k for home park (1.0 = neutral). Values < 1 reduce K expectation.
+# Team abbreviations from MLB schedule; extend as needed.
+teams:
+  COL: 0.92   # Coors — fewer Ks historically
+  ARI: 0.97
+  CIN: 0.98
+  BOS: 1.02
+  SEA: 1.03
+  default: 1.0
