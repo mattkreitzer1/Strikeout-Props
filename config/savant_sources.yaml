@@ -34,10 +34,17 @@ platoon_batter:
     url: "https://baseballsavant.mlb.com/statcast_search?hfPT=FF%7CSI%7CFC%7CCH%7CFS%7CFO%7CSC%7CCU%7CKC%7CCS%7CSL%7CST%7CSV%7CKN%7C&hfAB=&hfGT=R%7C&hfPR=&hfZ=&hfStadium=&hfBBL=&hfNewZones=&hfPull=&hfC=&hfSea=2026%7C2025%7C&hfSit=&player_type=batter&hfOuts=&home_road=&pitcher_throws=L&batter_stands=&hfSA=&hfEventOuts=&hfEventRuns=&hfABSFlag=&game_date_gt=&game_date_lt=&hfMo=&hfTeam=&hfOpponent=&hfRO=&position=&hfInfield=&hfOutfield=&hfInn=&hfBBT=&hfFlag=&metric_1=&group_by=pitch-type&min_pitches=75&min_results=0&min_pas=15&sort_col=k_percent&player_event_sort=h_launch_speed&sort_order=desc&chk_stats_pa=on&chk_stats_k_percent=on&chk_stats_swing_miss_percent=on"
 
 # Custom leaderboards — season zone/chase/whiff context (pitcher arsenal vs batter approach).
+# One export per year; build-features combines 2025 + 2026 with PA weighting.
 custom_leaderboard:
-  - id: pitcher_custom_2025_2026
+  - id: pitcher_custom_2025
+    kind: custom_leaderboard
+    url: "https://baseballsavant.mlb.com/leaderboard/custom?year=2025&type=pitcher&filter=&min=q&selections=pa%2Ck_percent%2Cbb_percent%2Cwhiff_percent%2Cswing_percent%2Czone_percent%2Co_swing_percent%2Cz_swing_percent%2Cwoba%2Cxwoba&chart=false&x=pa&y=pa&r=no&chartType=beeswarm&sort=xwoba&sortDir=asc"
+  - id: pitcher_custom_2026
     kind: custom_leaderboard
     url: "https://baseballsavant.mlb.com/leaderboard/custom?year=2026&type=pitcher&filter=&min=q&selections=pa%2Ck_percent%2Cbb_percent%2Cwhiff_percent%2Cswing_percent%2Czone_percent%2Co_swing_percent%2Cz_swing_percent%2Cwoba%2Cxwoba&chart=false&x=pa&y=pa&r=no&chartType=beeswarm&sort=xwoba&sortDir=asc"
-  - id: batter_custom_2025_2026
+  - id: batter_custom_2025
+    kind: custom_leaderboard
+    url: "https://baseballsavant.mlb.com/leaderboard/custom?year=2025&type=batter&filter=&min=q&selections=pa%2Ck_percent%2Cbb_percent%2Cwhiff_percent%2Cswing_percent%2Czone_percent%2Co_swing_percent%2Cz_swing_percent%2Cwoba%2Cxwoba&chart=false&x=pa&y=pa&r=no&chartType=beeswarm&sort=xwoba&sortDir=desc"
+  - id: batter_custom_2026
     kind: custom_leaderboard
     url: "https://baseballsavant.mlb.com/leaderboard/custom?year=2026&type=batter&filter=&min=q&selections=pa%2Ck_percent%2Cbb_percent%2Cwhiff_percent%2Cswing_percent%2Czone_percent%2Co_swing_percent%2Cz_swing_percent%2Cwoba%2Cxwoba&chart=false&x=pa&y=pa&r=no&chartType=beeswarm&sort=xwoba&sortDir=desc"

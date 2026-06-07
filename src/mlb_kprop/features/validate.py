@@ -243,13 +243,25 @@ def validate_daily_data(
         if len(custom) == 0:
             _record(report, f"processed/{filename}", False, "zero rows")
             continue
-        dup_ids = int(custom["player_id"].duplicated().sum())
+        dup_ids = (
+            int(custom.duplicated(["player_id", "year"]).sum())
+            if "year" in custom.columns
+            else int(custom["player_id"].duplicated().sum())
+        )
         _record(
             report,
             f"processed/{label}_unique_players",
             dup_ids == 0,
-            f"{dup_ids} duplicate player_id",
+            f"{dup_ids} duplicate player rows",
         )
+        if "year" in custom.columns:
+            years = set(pd.to_numeric(custom["year"], errors="coerce").dropna().astype(int))
+            _record(
+                report,
+                f"processed/{label}_seasons",
+                years >= {2025, 2026},
+                f"years present: {sorted(years)}",
+            )
         if "pa" in custom.columns:
             bad_pa = int((pd.to_numeric(custom["pa"], errors="coerce") <= 0).sum())
             _record(

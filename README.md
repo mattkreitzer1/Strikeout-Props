@@ -83,8 +83,8 @@ Uses platoon splits, **lineup-weighted opponent K%/whiff**, and **Savant zone/ch
 | Pitcher platoon search | `pitcher_R_vs_L.csv`, etc. | K%, whiff% **by pitch type**, rolled up per platoon split |
 | Batter vs hand search | `batter_vs_RHP.csv`, `batter_vs_LHP.csv` | Opponent K%, whiff% **vs RHP/LHP** (hand aggregate) |
 | Batter vs hand pitch search | `batter_vs_RHP_pitch_type.csv`, `batter_vs_LHP_pitch_type.csv` | Opponent K% **by pitch type vs hand** — weighted by pitcher arsenal |
-| Pitcher custom board | `pitcher_custom_2025_2026.csv` | Season whiff, zone%, chase% |
-| Batter custom board | `batter_custom_2025_2026.csv` | Opponent chase% (attached to lineup profiles) |
+| Pitcher custom board | `pitcher_custom_2025.csv`, `pitcher_custom_2026.csv` | Season whiff, zone%, chase% (PA-weighted 2025+2026) |
+| Batter custom board | `batter_custom_2025.csv`, `batter_custom_2026.csv` | Opponent chase% (PA-weighted 2025+2026) |
 
 **Composite K% formula** (`config/projection_defaults.yaml` → `k_model`):
 

@@ -96,7 +96,8 @@ def merge_pitcher_features(
     custom = pd.read_csv(custom_path) if custom_path.exists() else pd.DataFrame()
 
     if not custom.empty:
-        custom_prefixed = _prefix_custom_columns(custom)
+        custom_attach = _build_pitcher_skill(custom).rename(columns={"pa_total": "pa"})
+        custom_prefixed = _prefix_custom_columns(custom_attach)
         merged_long = platoon.merge(
             custom_prefixed,
             on="player_id",

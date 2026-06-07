@@ -6,6 +6,10 @@ from pathlib import Path
 
 import pandas as pd
 
+from mlb_kprop.features.merge import _weighted_mean
+
+CUSTOM_YEARS = (2025, 2026)
+
 
 @dataclass(frozen=True)
 class BuildOutputs:
@@ -44,6 +48,20 @@ def _to_numeric(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
         if col in out.columns:
             out[col] = pd.to_numeric(out[col], errors="coerce")
     return out
+
+
+def _load_custom_boards(day_raw: Path, kind: str) -> pd.DataFrame:
+    """Load and stack Savant custom leaderboards for each configured season."""
+    frames: list[pd.DataFrame] = []
+    for year in CUSTOM_YEARS:
+        path = day_raw / f"{kind}_custom_{year}.csv"
+        df = _normalize_custom(_read_csv(path))
+        frames.append(df)
+    combined = pd.concat(frames, ignore_index=True)
+    return _to_numeric(
+        combined,
+        cols=[c for c in CUSTOM_NUMERIC if c in combined.columns],
+    )
 
 
 def _normalize_custom(df: pd.DataFrame) -> pd.DataFrame:
@@ -143,18 +161,8 @@ def build_features(
     platoon_out = day_processed / "pitcher_platoon_pitch_type.csv"
     platoon.to_csv(platoon_out, index=False)
 
-    pitcher_custom_in = day_raw / "pitcher_custom_2025_2026.csv"
-    batter_custom_in = day_raw / "batter_custom_2025_2026.csv"
-    pitcher_custom = _normalize_custom(_read_csv(pitcher_custom_in))
-    batter_custom = _normalize_custom(_read_csv(batter_custom_in))
-    pitcher_custom = _to_numeric(
-        pitcher_custom,
-        cols=[c for c in CUSTOM_NUMERIC if c in pitcher_custom.columns],
-    )
-    batter_custom = _to_numeric(
-        batter_custom,
-        cols=[c for c in CUSTOM_NUMERIC if c in batter_custom.columns],
-    )
+    pitcher_custom = _load_custom_boards(day_raw, "pitcher")
+    batter_custom = _load_custom_boards(day_raw, "batter")
 
     batter_hand_files = [
         day_raw / "batter_vs_RHP.csv",
@@ -197,10 +205,17 @@ def build_features(
 
     batter_hand_out = day_processed / "batter_hand_summary.csv"
     if not batter_custom.empty and not batter_hand.empty:
-        chase = (
-            batter_custom.groupby("player_id", as_index=False)
-            .agg(o_swing_percent=("o_swing_percent", "mean"))
-        )
+        chase_rows: list[dict[str, object]] = []
+        for player_id, group in batter_custom.groupby("player_id", dropna=False):
+            chase_rows.append(
+                {
+                    "player_id": player_id,
+                    "o_swing_percent": _weighted_mean(
+                        group["o_swing_percent"], group["pa"]
+                    ),
+                }
+            )
+        chase = pd.DataFrame(chase_rows)
         batter_hand = batter_hand.merge(chase, on="player_id", how="left")
     batter_hand.to_csv(batter_hand_out, index=False)
 
