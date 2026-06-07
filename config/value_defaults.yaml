@@ -1,0 +1,33 @@
+# Phase 2: compare fair K to sportsbook lines (FanDuel etc.).
+
+# Base spread of strikeouts around fair_k for over/under probabilities (normal approx).
+k_sigma: 2.25
+
+# Widen sigma when lineup is still default (not confirmed) or recent BF is volatile.
+k_sigma_min: 1.85
+k_sigma_max: 3.25
+sigma_lineup_default_add: 0.35
+sigma_bf_std_multiplier: 0.08
+
+# Flag a side when model probability beats no-vig implied by at least this much (0.03 = 3%).
+min_edge: 0.03
+
+# Use no-vig implied probs (over + under normalized to 100%) for edge calculation.
+use_no_vig_implied: true
+
+# Phase C guardrails — reduce false 30%+ EV from model-book gaps.
+max_ev: 0.35
+max_fair_k_book_gap: 1.75
+
+# Stricter filters for the morning (early) run before lineups confirm.
+early_run:
+  max_ev: 0.22
+  max_fair_k_book_gap: 1.25
+  require_lineup_source: null
+
+# Confirmed-lineup afternoon refresh (Option 1).
+confirmed_run:
+  max_ev: 0.35
+  max_fair_k_book_gap: 1.75
+  require_lineup_source: lineup
+  skip_started_games: true

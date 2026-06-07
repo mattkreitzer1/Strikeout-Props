@@ -1,0 +1,15 @@
+# OddsTrader free odds (guest JWT from their site — no paid API key).
+# Strikeout player props market id on OddsTrader (m=766 in the URL).
+strikeout_mtid: 766
+
+# Sportsbook participant id (paid) for bestLines. 9 = BetRivers (only book with
+# K props on many slates during testing). See oddstrader.com for other books.
+sportsbook_paid: 9
+sportsbook_name: BetRivers
+
+# Pages used to discover auth + today's MLB event ids (eids in matchup URLs).
+props_page_url: https://www.oddstrader.com/mlb/player-props/?m=766
+matchups_page_url: https://www.oddstrader.com/mlb/matchups/
+
+# Seconds between GraphQL calls (be polite).
+seconds_between_requests: 0.35

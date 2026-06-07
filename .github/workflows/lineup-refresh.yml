@@ -1,0 +1,108 @@
+# AFTERNOON / FINAL RUN (~4 PM US/Eastern): confirmed lineups → final EV → tracker picks.
+# This is the run to use (or wait for) before placing bets.
+# Day games may already be started and are skipped.
+
+name: Afternoon — confirmed FINAL (~4 PM ET)
+
+on:
+  schedule:
+    # 20:00 UTC ≈ 4:00 PM EDT / 3:00 PM EST
+    - cron: "0 20 * * *"
+  workflow_dispatch:
+    inputs:
+      run_date:
+        description: "FINAL plays — confirmed lineups + tracker recording. Date YYYY-MM-DD; blank = today ET."
+        required: false
+        type: string
+
+jobs:
+  lineup-refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e . --config-settings editable_mode=compat
+
+      - name: Set run date (America/New_York)
+        id: date
+        run: |
+          if [ -n "${{ inputs.run_date }}" ]; then
+            RUN_DATE="${{ inputs.run_date }}"
+          else
+            RUN_DATE=$(TZ=America/New_York date +%Y-%m-%d)
+          fi
+          echo "RUN_DATE=${RUN_DATE}" >> "$GITHUB_ENV"
+          echo "run_date=${RUN_DATE}" >> "$GITHUB_OUTPUT"
+
+      - name: Run lineup refresh (confirmed lineups)
+        run: python -m mlb_kprop run-lineup-refresh --date "$RUN_DATE" --run-mode confirmed
+
+      - name: Email confirmed digest
+        if: success()
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+        run: python -m mlb_kprop send-email --date "$RUN_DATE" --run-mode confirmed
+
+      - name: Email failure alert
+        if: failure()
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+        run: |
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          python -m mlb_kprop send-failure-email \
+            --date "$RUN_DATE" \
+            --run-mode confirmed \
+            --workflow-label "Afternoon — confirmed FINAL" \
+            --run-url "$RUN_URL"
+
+      - name: Commit performance tracker
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/tracker/
+          if git diff --staged --quiet; then
+            echo "No tracker changes to commit."
+          else
+            git commit -m "Update K prop tracker (confirmed) for ${RUN_DATE}"
+            git push
+          fi
+
+      - name: Upload refresh artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kprop-confirmed-${{ steps.date.outputs.run_date }}
+          retention-days: 14
+          path: |
+            reports/value_${{ steps.date.outputs.run_date }}.csv
+            reports/projections_${{ steps.date.outputs.run_date }}.csv
+            data/starters/${{ steps.date.outputs.run_date }}.csv
+            data/lines/${{ steps.date.outputs.run_date }}.csv
+            data/tracker/ledger.csv
+            data/tracker/summary.txt
+          if-no-files-found: warn
