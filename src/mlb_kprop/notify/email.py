@@ -21,6 +21,13 @@ class EmailDigestOutputs:
     recipient: str
 
 
+@dataclass(frozen=True)
+class FailureAlertOutputs:
+    run_date: Date
+    recipient: str
+    validation_failures: int
+
+
 def load_email_config(config_path: Path = DEFAULT_CONFIG_PATH) -> dict[str, Any]:
     if not config_path.exists():
         return {}
@@ -43,6 +50,153 @@ def _smtp_settings() -> dict[str, str | int]:
         "to": to_addr,
         "from": from_addr,
     }
+
+
+def _deliver_message(msg: EmailMessage, smtp: dict[str, str | int], dry_run: bool) -> None:
+    if dry_run:
+        print("--- DRY RUN ---")
+        print(f"To: {smtp['to']}")
+        print(f"Subject: {msg['Subject']}")
+        print(msg.get_content())
+        return
+
+    with smtplib.SMTP(str(smtp["host"]), int(smtp["port"])) as server:
+        server.starttls()
+        server.login(str(smtp["user"]), str(smtp["password"]))
+        server.send_message(msg)
+
+
+def _resolve_smtp(dry_run: bool) -> dict[str, str | int] | None:
+    smtp = _smtp_settings()
+    if not smtp["password"] or not smtp["to"]:
+        if dry_run:
+            return {
+                **smtp,
+                "to": smtp["to"] or "you@example.com",
+                "from": smtp["from"] or "mlb-kprop@example.com",
+                "password": "dry-run",
+            }
+        print(
+            "Email skipped: set SMTP_USER, SMTP_PASSWORD, and EMAIL_TO "
+            "(see README → Email to your phone)."
+        )
+        return None
+    return smtp
+
+
+def parse_validation_failures(validation_path: Path) -> list[str]:
+    """Return human-readable failure lines from reports/validation_<date>.txt."""
+    if not validation_path.exists():
+        return []
+    failures: list[str] = []
+    for line in validation_path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("FAIL\t"):
+            failures.append(line.removeprefix("FAIL\t"))
+    return failures
+
+
+def build_failure_body(
+    run_date: Date,
+    run_mode: str,
+    workflow_label: str,
+    validation_failures: list[str],
+    run_url: str | None = None,
+) -> str:
+    lines = [
+        f"MLB K prop pipeline FAILED — {run_date.isoformat()}",
+        f"Workflow: {workflow_label} ({run_mode})",
+        "",
+        "The daily digest was NOT sent. Do not use today's sheet until this is fixed.",
+    ]
+    if run_url:
+        lines.extend(["", f"GitHub Actions run: {run_url}"])
+
+    if validation_failures:
+        lines.extend(["", "Validation failures:"])
+        for detail in validation_failures[:25]:
+            lines.append(f"  • {detail}")
+        if len(validation_failures) > 25:
+            lines.append(f"  … and {len(validation_failures) - 25} more")
+    else:
+        lines.extend(
+            [
+                "",
+                "No validation report found — failure may be Savant fetch,",
+                "OddsTrader, MLB API, scoring, or an earlier pipeline step.",
+            ]
+        )
+
+    lines.extend(["", "— mlb_kprop"])
+    return "\n".join(lines)
+
+
+def _failure_subject(
+    cfg: dict[str, Any],
+    run_date: Date,
+    run_mode: str,
+) -> str:
+    if run_mode == "confirmed":
+        template = str(
+            cfg.get("subject_failure_confirmed", "MLB K props FAILED (confirmed) — {date}")
+        )
+    else:
+        template = str(cfg.get("subject_failure_early", "MLB K props FAILED (early) — {date}"))
+    return template.format(date=run_date.isoformat())
+
+
+def send_failure_alert(
+    run_date: Date,
+    reports_root: Path = Path("reports"),
+    config_path: Path = DEFAULT_CONFIG_PATH,
+    dry_run: bool = False,
+    run_mode: str = "early",
+    workflow_label: str = "daily pipeline",
+    run_url: str | None = None,
+) -> FailureAlertOutputs | None:
+    """
+    Email when GitHub Actions (or a local run) fails before the success digest.
+
+    Reads validation failures from reports/validation_<date>.txt when present.
+    """
+    cfg = load_email_config(config_path)
+    smtp = _resolve_smtp(dry_run)
+    if smtp is None:
+        return None
+
+    validation_path = reports_root / f"validation_{run_date.isoformat()}.txt"
+    validation_failures = parse_validation_failures(validation_path)
+    body = build_failure_body(
+        run_date,
+        run_mode,
+        workflow_label,
+        validation_failures,
+        run_url=run_url,
+    )
+    subject = _failure_subject(cfg, run_date, run_mode)
+
+    msg = EmailMessage()
+    msg["Subject"] = subject
+    msg["From"] = str(smtp["from"])
+    msg["To"] = str(smtp["to"])
+    msg.set_content(body)
+
+    if validation_path.exists():
+        msg.add_attachment(
+            validation_path.read_bytes(),
+            maintype="text",
+            subtype="plain",
+            filename=validation_path.name,
+        )
+
+    _deliver_message(msg, smtp, dry_run)
+    if not dry_run:
+        print(f"Sent failure alert to {smtp['to']}.")
+
+    return FailureAlertOutputs(
+        run_date=run_date,
+        recipient=str(smtp["to"]),
+        validation_failures=len(validation_failures),
+    )
 
 
 def _format_play_row(row: pd.Series) -> str:
@@ -113,22 +267,9 @@ def send_daily_digest(
       SMTP_HOST (default smtp.gmail.com), SMTP_PORT (default 587), EMAIL_FROM
     """
     cfg = load_email_config(config_path)
-    smtp = _smtp_settings()
-
-    if not smtp["password"] or not smtp["to"]:
-        if dry_run:
-            smtp = {
-                **smtp,
-                "to": smtp["to"] or "you@example.com",
-                "from": smtp["from"] or "mlb-kprop@example.com",
-                "password": "dry-run",
-            }
-        else:
-            print(
-                "Email skipped: set SMTP_USER, SMTP_PASSWORD, and EMAIL_TO "
-                "(see README → Email to your phone)."
-            )
-            return None
+    smtp = _resolve_smtp(dry_run)
+    if smtp is None:
+        return None
 
     path = value_path or reports_root / f"value_{run_date.isoformat()}.csv"
     if not path.exists():
@@ -166,21 +307,14 @@ def send_daily_digest(
         )
 
     if dry_run:
-        print("--- DRY RUN ---")
-        print(f"To: {smtp['to']}")
-        print(f"Subject: {subject}")
-        print(body)
+        _deliver_message(msg, smtp, dry_run=True)
         return EmailDigestOutputs(
             run_date=run_date,
             plays_sent=play_count,
             recipient=str(smtp["to"]),
         )
 
-    with smtplib.SMTP(str(smtp["host"]), int(smtp["port"])) as server:
-        server.starttls()
-        server.login(str(smtp["user"]), str(smtp["password"]))
-        server.send_message(msg)
-
+    _deliver_message(msg, smtp, dry_run=False)
     print(f"Sent digest to {smtp['to']} ({play_count} plays in body).")
     return EmailDigestOutputs(
         run_date=run_date,

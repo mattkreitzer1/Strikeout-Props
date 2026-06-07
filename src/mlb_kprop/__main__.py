@@ -21,7 +21,7 @@ from mlb_kprop.projections.starters import write_starters_template
 from mlb_kprop.projections.lines import write_lines_template
 from mlb_kprop.projections.value import value_props
 from mlb_kprop.odds.fetch import fetch_oddstrader_lines
-from mlb_kprop.notify.email import send_daily_digest
+from mlb_kprop.notify.email import send_daily_digest, send_failure_alert
 from mlb_kprop.tracker.ledger import track_performance
 
 
@@ -53,6 +53,8 @@ class CliArgs:
     no_grade: bool = False
     run_mode: str = "early"
     dry_run: bool = False
+    workflow_label: str = "daily pipeline"
+    run_url: str | None = None
 
 
 def _parse_args() -> CliArgs:
@@ -405,6 +407,45 @@ def _parse_args() -> CliArgs:
         help="Controls subject line (early vs confirmed lineups).",
     )
 
+    send_failure_parser = subparsers.add_parser(
+        "send-failure-email",
+        help="Email pipeline failure alert (used by GitHub Actions on failure).",
+    )
+    add_shared_options(send_failure_parser)
+    send_failure_parser.add_argument(
+        "--out-dir",
+        type=Path,
+        default=Path("reports"),
+        help="Folder containing validation_<date>.txt.",
+    )
+    send_failure_parser.add_argument(
+        "--email-config",
+        type=Path,
+        default=Path("config/email_defaults.yaml"),
+        help="Email subject and formatting defaults.",
+    )
+    send_failure_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print the email instead of sending.",
+    )
+    send_failure_parser.add_argument(
+        "--run-mode",
+        choices=("early", "confirmed"),
+        default="early",
+        help="Controls subject line (early vs confirmed lineups).",
+    )
+    send_failure_parser.add_argument(
+        "--workflow-label",
+        default="daily pipeline",
+        help="Human-readable workflow name for the alert body.",
+    )
+    send_failure_parser.add_argument(
+        "--run-url",
+        default=None,
+        help="Link to the GitHub Actions run (optional).",
+    )
+
     track_parser = subparsers.add_parser(
         "track-performance",
         help="Record flagged picks and grade results (updates data/tracker/).",
@@ -468,6 +509,8 @@ def _parse_args() -> CliArgs:
         no_grade=getattr(ns, "no_grade", False),
         run_mode=getattr(ns, "run_mode", "early"),
         dry_run=getattr(ns, "dry_run", False),
+        workflow_label=getattr(ns, "workflow_label", "daily pipeline"),
+        run_url=getattr(ns, "run_url", None),
     )
 
 
@@ -598,6 +641,18 @@ def _run_send_email(args: CliArgs) -> None:
     )
 
 
+def _run_send_failure_email(args: CliArgs) -> None:
+    send_failure_alert(
+        run_date=args.date,
+        reports_root=args.out_dir,
+        config_path=args.email_config,
+        dry_run=args.dry_run,
+        run_mode=args.run_mode,
+        workflow_label=args.workflow_label,
+        run_url=args.run_url,
+    )
+
+
 def _run_lineup_refresh(args: CliArgs) -> None:
     run_lineup_refresh(
         run_date=args.date,
@@ -696,6 +751,10 @@ def main() -> None:
 
     if args.command == "send-email":
         _run_send_email(args)
+        return
+
+    if args.command == "send-failure-email":
+        _run_send_failure_email(args)
         return
 
     if args.command == "track-performance":
