@@ -4,4 +4,4 @@ Model era: phase2_v1
 
 No graded plays yet.
 
-Pending (awaiting final stats): 4
+Pending (awaiting final stats): 9
