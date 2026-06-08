@@ -51,6 +51,14 @@ jobs:
       - name: Run daily pipeline
         run: python -m mlb_kprop run-daily --date "$RUN_DATE" --run-mode early
 
+      - name: Cache Savant data for afternoon refresh
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            data/processed/${{ env.RUN_DATE }}
+            data/raw/${{ env.RUN_DATE }}
+          key: savant-${{ env.RUN_DATE }}
+
       - name: Email early digest
         if: success()
         env:
@@ -103,6 +111,7 @@ jobs:
             reports/projections_${{ steps.date.outputs.run_date }}.csv
             reports/validation_${{ steps.date.outputs.run_date }}.txt
             reports/savant_fetch_${{ steps.date.outputs.run_date }}.csv
+            data/processed/${{ steps.date.outputs.run_date }}/
             data/starters/${{ steps.date.outputs.run_date }}.csv
             data/lines/${{ steps.date.outputs.run_date }}.csv
             data/tracker/ledger.csv

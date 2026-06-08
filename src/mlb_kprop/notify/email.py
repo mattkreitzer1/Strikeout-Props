@@ -121,8 +121,9 @@ def build_failure_body(
         lines.extend(
             [
                 "",
-                "No validation report found — failure may be Savant fetch,",
-                "OddsTrader, MLB API, scoring, or an earlier pipeline step.",
+                "No validation report found — common causes:",
+                "  • Afternoon: missing morning processed Savant data (data/processed/<date>/)",
+                "  • Savant fetch, OddsTrader, MLB API, scoring, or an earlier step",
             ]
         )
 

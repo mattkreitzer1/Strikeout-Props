@@ -48,6 +48,51 @@ jobs:
           echo "RUN_DATE=${RUN_DATE}" >> "$GITHUB_ENV"
           echo "run_date=${RUN_DATE}" >> "$GITHUB_OUTPUT"
 
+      - name: Restore Savant data from morning run
+        id: savant-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            data/processed/${{ env.RUN_DATE }}
+            data/raw/${{ env.RUN_DATE }}
+          key: savant-${{ env.RUN_DATE }}
+
+      - name: Ensure morning Savant data is available
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SUMMARY="data/processed/${RUN_DATE}/pitcher_split_summary.csv"
+          if [ -f "$SUMMARY" ]; then
+            echo "Savant processed data ready."
+            exit 0
+          fi
+
+          echo "Cache miss — downloading morning artifact kprop-${RUN_DATE}..."
+          RUN_ID=$(gh run list \
+            --workflow=daily.yml \
+            --status=success \
+            --json databaseId \
+            --limit 1 \
+            --jq '.[0].databaseId // empty')
+          if [ -n "$RUN_ID" ]; then
+            gh run download "$RUN_ID" -n "kprop-${RUN_DATE}" -D /tmp/morning-artifact || true
+            if [ -d "/tmp/morning-artifact/data/processed/${RUN_DATE}" ]; then
+              mkdir -p "data/processed"
+              cp -r "/tmp/morning-artifact/data/processed/${RUN_DATE}" "data/processed/"
+            fi
+          fi
+
+          if [ -f "$SUMMARY" ]; then
+            echo "Restored processed data from morning artifact."
+            exit 0
+          fi
+
+          echo "Rebuilding Savant pipeline (morning data unavailable)..."
+          python -m mlb_kprop fetch-savant --date "$RUN_DATE"
+          python -m mlb_kprop build-features --date "$RUN_DATE"
+          python -m mlb_kprop merge-features --date "$RUN_DATE"
+          python -m mlb_kprop validate-data --date "$RUN_DATE"
+
       - name: Run lineup refresh (confirmed lineups)
         run: python -m mlb_kprop run-lineup-refresh --date "$RUN_DATE" --run-mode confirmed
 

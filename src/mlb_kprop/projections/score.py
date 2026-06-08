@@ -124,7 +124,8 @@ def score_projections(
 
     if not summary_path.exists():
         raise FileNotFoundError(
-            f"Missing {summary_path}. Run `python -m mlb_kprop run-daily` first."
+            f"Missing {summary_path}. Run morning `run-daily` first "
+            "(afternoon refresh reuses that day's processed Savant tables)."
         )
 
     summary = pd.read_csv(summary_path)
