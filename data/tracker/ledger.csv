@@ -1,1 +1,5 @@
 slate_date,player_id,player_name,pick,book_line,fair_k,pick_edge,pick_ev,pick_odds,actual_k,result,profit_units,model_version,recorded_at,graded_at
+2026-06-08,671096,"Abbott, Andrew",UNDER,4.5,3.971,0.0446,0.0191,-135,,PENDING,,phase2_v1,2026-06-08T21:25:54,
+2026-06-08,813349,"Early, Connelly",UNDER,4.5,4.536,0.0693,0.0872,120,,PENDING,,phase2_v1,2026-06-08T21:25:54,
+2026-06-08,676106,"Hancock, Emerson",UNDER,5.5,4.35,0.1048,0.1054,-165,,PENDING,,phase2_v1,2026-06-08T21:25:54,
+2026-06-08,701542,"Warren, Will",UNDER,4.5,3.828,0.0672,0.0584,-135,,PENDING,,phase2_v1,2026-06-08T21:25:54,
