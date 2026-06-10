@@ -96,6 +96,27 @@ jobs:
       - name: Run lineup refresh (confirmed lineups)
         run: python -m mlb_kprop run-lineup-refresh --date "$RUN_DATE" --run-mode confirmed
 
+      - name: Commit performance tracker
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/tracker/
+          if git diff --staged --quiet; then
+            echo "No tracker changes to commit."
+          else
+            git commit -m "Update K prop tracker (confirmed) for ${RUN_DATE}"
+            for attempt in 1 2 3; do
+              if git pull --rebase origin main && git push; then
+                exit 0
+              fi
+              echo "Tracker push attempt ${attempt} failed; retrying..."
+              sleep $((attempt * 5))
+            done
+            echo "Tracker commit/push failed after 3 attempts."
+            exit 1
+          fi
+
       - name: Email confirmed digest
         if: success()
         env:
@@ -123,19 +144,6 @@ jobs:
             --run-mode confirmed \
             --workflow-label "Afternoon — confirmed FINAL" \
             --run-url "$RUN_URL"
-
-      - name: Commit performance tracker
-        if: success()
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/tracker/
-          if git diff --staged --quiet; then
-            echo "No tracker changes to commit."
-          else
-            git commit -m "Update K prop tracker (confirmed) for ${RUN_DATE}"
-            git push
-          fi
 
       - name: Upload refresh artifacts
         uses: actions/upload-artifact@v4

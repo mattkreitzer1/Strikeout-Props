@@ -52,18 +52,21 @@ class MlbGameStatsClient:
         """
         Sum strikeouts for a pitcher on a calendar date.
 
-        Returns None if games are not all final yet, or pitcher did not appear.
+        Grades each pitcher once their game is Final (does not wait for the
+        full slate). Returns None while the pitcher's game is still in progress
+        or if they did not appear in a final box score.
         """
         games = self.games_on_date(slate_date)
         if not games:
             return None
 
-        if not all(g.get("status", {}).get("abstractGameState") == "Final" for g in games):
-            return None
-
         total_k = 0
         found = False
+        player_key = f"ID{player_id}"
+
         for game in games:
+            if game.get("status", {}).get("abstractGameState") != "Final":
+                continue
             pk = int(game["gamePk"])
             feed = self._get(f"{MLB_API_BASE}.1/game/{pk}/feed/live")
             for side in ("home", "away"):
@@ -74,7 +77,6 @@ class MlbGameStatsClient:
                     .get(side, {})
                     .get("players", {})
                 )
-                player_key = f"ID{player_id}"
                 if player_key not in players:
                     continue
                 pitching = players[player_key].get("stats", {}).get("pitching", {})

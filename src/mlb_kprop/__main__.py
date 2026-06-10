@@ -51,6 +51,7 @@ class CliArgs:
     tracker_config: Path = Path("config/tracker_defaults.yaml")
     no_record: bool = False
     no_grade: bool = False
+    value_path: Path | None = None
     run_mode: str = "early"
     dry_run: bool = False
     workflow_label: str = "daily pipeline"
@@ -473,6 +474,30 @@ def _parse_args() -> CliArgs:
         action="store_true",
         help="Skip grading pending picks (record today only).",
     )
+    track_parser.add_argument(
+        "--value-path",
+        type=Path,
+        default=None,
+        help="Explicit value_<date>.csv path (default: reports/value_<date>.csv).",
+    )
+
+    backfill_parser = subparsers.add_parser(
+        "backfill-tracker",
+        help="Record picks from a saved value_<date>.csv, then grade pending rows.",
+    )
+    add_shared_options(backfill_parser)
+    backfill_parser.add_argument(
+        "--value-path",
+        type=Path,
+        required=True,
+        help="Path to value_<date>.csv (e.g. from a GitHub Actions artifact).",
+    )
+    backfill_parser.add_argument(
+        "--tracker-config",
+        type=Path,
+        default=Path("config/tracker_defaults.yaml"),
+        help="Ledger and summary output paths.",
+    )
 
     ns = parser.parse_args()
     out_dir = getattr(ns, "out_dir", Path("reports"))
@@ -507,6 +532,7 @@ def _parse_args() -> CliArgs:
         ),
         no_record=getattr(ns, "no_record", False),
         no_grade=getattr(ns, "no_grade", False),
+        value_path=getattr(ns, "value_path", None),
         run_mode=getattr(ns, "run_mode", "early"),
         dry_run=getattr(ns, "dry_run", False),
         workflow_label=getattr(ns, "workflow_label", "daily pipeline"),
@@ -673,6 +699,7 @@ def _run_track_performance(args: CliArgs) -> None:
     outputs = track_performance(
         run_date=args.date,
         reports_root=args.out_dir,
+        value_path=args.value_path,
         config_path=args.tracker_config,
         record_today=not args.no_record,
         grade_pending=not args.no_grade,
@@ -758,6 +785,10 @@ def main() -> None:
         return
 
     if args.command == "track-performance":
+        _run_track_performance(args)
+        return
+
+    if args.command == "backfill-tracker":
         _run_track_performance(args)
         return
 
