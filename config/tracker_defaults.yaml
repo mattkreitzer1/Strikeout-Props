@@ -4,6 +4,7 @@ ledger_path: data/tracker/ledger.csv
 summary_path: data/tracker/summary.txt
 daily_rollup_path: data/tracker/daily_rollup.csv
 ev_rollup_path: data/tracker/ev_rollup.csv
+side_rollup_path: data/tracker/side_rollup.csv
 
 # Tag picks so rollups stay tied to a model era (Phase 2 + calibration + pitch splits).
 model_version: phase2_v1

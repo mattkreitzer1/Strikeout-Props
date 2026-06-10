@@ -125,5 +125,6 @@ jobs:
             data/tracker/ledger.csv
             data/tracker/daily_rollup.csv
             data/tracker/ev_rollup.csv
+            data/tracker/side_rollup.csv
             data/tracker/summary.txt
           if-no-files-found: warn

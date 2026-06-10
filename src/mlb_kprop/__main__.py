@@ -712,6 +712,7 @@ def _run_track_performance(args: CliArgs) -> None:
     print(f"Summary: {outputs.summary_txt}")
     print(f"Daily rollup: {outputs.daily_rollup_csv}")
     print(f"EV rollup: {outputs.ev_rollup_csv}")
+    print(f"Side rollup: {outputs.side_rollup_csv}")
     print()
     print(outputs.summary_txt.read_text(encoding="utf-8"))
 

@@ -11,8 +11,12 @@ By EV bucket:
   Strong (15-25% EV): 3-4 (7 picks, -0.95u, -13.5% ROI, avg EV 22.1%)
   Elite (25%+ EV): 2-0 (2 picks, +1.71u, +85.5% ROI, avg EV 28.0%)
 
+By side (OVER / UNDER):
+  OVER: 1-3 (4 picks, -2.41u, -60.3% ROI, avg EV 2.8%)
+  UNDER: 9-8 (17 picks, -0.55u, -3.2% ROI, avg EV 15.2%)
+
 Last 7 slate days:
   2026-06-09: 7-5 (12 picks, +0.81u)
   2026-06-08: 3-6 (9 picks, -3.77u)
 
-Pending (awaiting final stats): 6
+Pending (awaiting final stats): 6 (1 OVER, 5 UNDER)

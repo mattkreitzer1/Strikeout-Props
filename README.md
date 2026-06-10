@@ -345,7 +345,8 @@ Outputs (committed by GitHub Actions so history survives between runs):
 | `data/tracker/ledger.csv` | One row per pick — line, EV, odds, actual K, W/L, units |
 | `data/tracker/daily_rollup.csv` | Per-slate win/loss and ROI |
 | `data/tracker/ev_rollup.csv` | W/L and ROI grouped by EV bucket (thin / moderate / strong / elite) |
-| `data/tracker/summary.txt` | Rolling totals, EV buckets, last 7 slate days (also in daily email) |
+| `data/tracker/side_rollup.csv` | W/L and ROI grouped by OVER vs UNDER |
+| `data/tracker/summary.txt` | Rolling totals, EV buckets, OVER/UNDER split, last 7 slate days (also in daily email) |
 
 **Backfill from existing value sheets:**
 

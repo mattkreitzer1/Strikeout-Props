@@ -158,4 +158,5 @@ jobs:
             data/lines/${{ steps.date.outputs.run_date }}.csv
             data/tracker/ledger.csv
             data/tracker/summary.txt
+            data/tracker/side_rollup.csv
           if-no-files-found: warn

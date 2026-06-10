@@ -45,6 +45,7 @@ class TrackerOutputs:
     summary_txt: Path
     daily_rollup_csv: Path
     ev_rollup_csv: Path
+    side_rollup_csv: Path
     picks_recorded: int
     picks_graded: int
     pending_count: int
@@ -337,6 +338,45 @@ def build_ev_bucket_rollup(
     return pd.DataFrame(rows, columns=columns)
 
 
+def build_side_rollup(ledger: pd.DataFrame) -> pd.DataFrame:
+    """Win/loss and ROI grouped by OVER vs UNDER."""
+    graded = ledger[ledger["result"].isin(["WIN", "LOSS", "PUSH"])].copy()
+    columns = [
+        "pick",
+        "picks",
+        "wins",
+        "losses",
+        "pushes",
+        "units",
+        "win_pct",
+        "roi_pct",
+        "avg_pick_ev",
+    ]
+    if graded.empty:
+        return pd.DataFrame(columns=columns)
+
+    rows: list[dict[str, object]] = []
+    for side in ("OVER", "UNDER"):
+        subset = graded[graded["pick"] == side]
+        if subset.empty:
+            continue
+        stats = _bucket_stats(subset)
+        rows.append(
+            {
+                "pick": side,
+                "picks": stats["picks"],
+                "wins": stats["wins"],
+                "losses": stats["losses"],
+                "pushes": stats["pushes"],
+                "units": round(stats["units"], 4),
+                "win_pct": round(stats["win_pct"], 1),
+                "roi_pct": round(stats["roi_pct"], 1),
+                "avg_pick_ev": round(stats["avg_ev"], 4),
+            }
+        )
+    return pd.DataFrame(rows, columns=columns)
+
+
 def build_summary_text(
     ledger: pd.DataFrame,
     buckets: list[EvBucket] | None = None,
@@ -375,6 +415,16 @@ def build_summary_text(
                 f"{row['roi_pct']:+.1f}% ROI, avg EV {row['avg_pick_ev']:.1%})"
             )
 
+        side_rollup = build_side_rollup(ledger)
+        if not side_rollup.empty:
+            lines.extend(["", "By side (OVER / UNDER):"])
+            for _, row in side_rollup.iterrows():
+                lines.append(
+                    f"  {row['pick']}: {int(row['wins'])}-{int(row['losses'])} "
+                    f"({int(row['picks'])} picks, {row['units']:+.2f}u, "
+                    f"{row['roi_pct']:+.1f}% ROI, avg EV {row['avg_pick_ev']:.1%})"
+                )
+
         lines.extend(["", "Last 7 slate days:"])
 
         rollup = (
@@ -395,7 +445,15 @@ def build_summary_text(
             )
 
     if not pending.empty:
-        lines.extend(["", f"Pending (awaiting final stats): {len(pending)}"])
+        pending_over = int((pending["pick"] == "OVER").sum())
+        pending_under = int((pending["pick"] == "UNDER").sum())
+        lines.extend(
+            [
+                "",
+                f"Pending (awaiting final stats): {len(pending)} "
+                f"({pending_over} OVER, {pending_under} UNDER)",
+            ]
+        )
 
     lines.append("")
     return "\n".join(lines)
@@ -440,6 +498,7 @@ def track_performance(
     summary_path = Path(cfg.get("summary_path", "data/tracker/summary.txt"))
     rollup_path = Path(cfg.get("daily_rollup_path", "data/tracker/daily_rollup.csv"))
     ev_rollup_path = Path(cfg.get("ev_rollup_path", "data/tracker/ev_rollup.csv"))
+    side_rollup_path = Path(cfg.get("side_rollup_path", "data/tracker/side_rollup.csv"))
     buckets = ev_buckets_from_config(cfg)
 
     value_csv = value_path or reports_root / f"value_{run_date.isoformat()}.csv"
@@ -474,11 +533,16 @@ def track_performance(
     ev_rollup_path.parent.mkdir(parents=True, exist_ok=True)
     ev_rollup.to_csv(ev_rollup_path, index=False)
 
+    side_rollup = build_side_rollup(ledger)
+    side_rollup_path.parent.mkdir(parents=True, exist_ok=True)
+    side_rollup.to_csv(side_rollup_path, index=False)
+
     return TrackerOutputs(
         ledger_csv=ledger_path,
         summary_txt=summary_path,
         daily_rollup_csv=rollup_path,
         ev_rollup_csv=ev_rollup_path,
+        side_rollup_csv=side_rollup_path,
         picks_recorded=picks_recorded,
         picks_graded=picks_graded,
         pending_count=pending_count,
