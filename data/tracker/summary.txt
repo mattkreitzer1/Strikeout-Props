@@ -12,3 +12,5 @@ By EV bucket:
 
 Last 7 slate days:
   2026-06-08: 3-6 (9 picks, -3.77u)
+
+Pending (awaiting final stats): 6
