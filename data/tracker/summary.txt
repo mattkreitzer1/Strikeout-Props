@@ -2,24 +2,25 @@ MLB K prop tracker — performance history
 
 Model era: phase2_v1
 
-Graded plays: 46 (21-25-0)
-Win rate: 45.7%  |  Units: -8.63  |  ROI: -18.8% (1u flat)
+Graded plays: 53 (22-31-0)
+Win rate: 41.5%  |  Units: -13.63  |  ROI: -25.7% (1u flat)
 
 By EV bucket:
-  Thin (<5% EV): 6-13 (19 picks, -9.07u, -47.7% ROI, avg EV 2.7%)
-  Moderate (5-15% EV): 6-7 (13 picks, -3.12u, -24.0% ROI, avg EV 8.6%)
-  Strong (15-25% EV): 5-5 (10 picks, +0.09u, +0.9% ROI, avg EV 22.1%)
-  Elite (25%+ EV): 4-0 (4 picks, +3.48u, +86.9% ROI, avg EV 27.8%)
+  Thin (<5% EV): 6-14 (20 picks, -10.07u, -50.4% ROI, avg EV 2.6%)
+  Moderate (5-15% EV): 6-9 (15 picks, -5.12u, -34.2% ROI, avg EV 8.8%)
+  Strong (15-25% EV): 6-7 (13 picks, -0.91u, -7.0% ROI, avg EV 21.4%)
+  Elite (25%+ EV): 4-1 (5 picks, +2.48u, +49.5% ROI, avg EV 27.5%)
 
 By side (OVER / UNDER):
-  OVER: 1-6 (7 picks, -5.41u, -77.3% ROI, avg EV 3.6%)
-  UNDER: 20-19 (39 picks, -3.22u, -8.3% ROI, avg EV 12.1%)
+  OVER: 2-7 (9 picks, -5.41u, -60.1% ROI, avg EV 6.7%)
+  UNDER: 20-24 (44 picks, -8.22u, -18.7% ROI, avg EV 12.3%)
 
 Last 7 slate days:
+  2026-06-15: 1-6 (7 picks, -5.00u)
   2026-06-13: 3-1 (4 picks, +1.54u)
   2026-06-12: 7-8 (15 picks, -3.42u)
   2026-06-10: 1-5 (6 picks, -3.80u)
   2026-06-09: 7-5 (12 picks, +0.81u)
   2026-06-08: 3-6 (9 picks, -3.77u)
 
-Pending (awaiting final stats): 10 (3 OVER, 7 UNDER)
+Pending (awaiting final stats): 3 (1 OVER, 2 UNDER)
