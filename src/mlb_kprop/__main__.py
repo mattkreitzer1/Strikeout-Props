@@ -52,6 +52,7 @@ class CliArgs:
     no_record: bool = False
     no_grade: bool = False
     value_path: Path | None = None
+    catch_up: bool = False
     run_mode: str = "early"
     dry_run: bool = False
     workflow_label: str = "daily pipeline"
@@ -480,6 +481,17 @@ def _parse_args() -> CliArgs:
         default=None,
         help="Explicit value_<date>.csv path (default: reports/value_<date>.csv).",
     )
+    track_parser.add_argument(
+        "--run-mode",
+        choices=("early", "confirmed"),
+        default="confirmed",
+        help="Source label for recorded picks (early vs confirmed sheet).",
+    )
+    track_parser.add_argument(
+        "--catch-up",
+        action="store_true",
+        help="Save value history and backfill recent slates missing from the ledger.",
+    )
 
     backfill_parser = subparsers.add_parser(
         "backfill-tracker",
@@ -497,6 +509,12 @@ def _parse_args() -> CliArgs:
         type=Path,
         default=Path("config/tracker_defaults.yaml"),
         help="Ledger and summary output paths.",
+    )
+    backfill_parser.add_argument(
+        "--run-mode",
+        choices=("early", "confirmed"),
+        default="confirmed",
+        help="Source label for the recovered sheet (default confirmed).",
     )
 
     ns = parser.parse_args()
@@ -533,6 +551,7 @@ def _parse_args() -> CliArgs:
         no_record=getattr(ns, "no_record", False),
         no_grade=getattr(ns, "no_grade", False),
         value_path=getattr(ns, "value_path", None),
+        catch_up=getattr(ns, "catch_up", False),
         run_mode=getattr(ns, "run_mode", "early"),
         dry_run=getattr(ns, "dry_run", False),
         workflow_label=getattr(ns, "workflow_label", "daily pipeline"),
@@ -703,11 +722,13 @@ def _run_track_performance(args: CliArgs) -> None:
         config_path=args.tracker_config,
         record_today=not args.no_record,
         grade_pending=not args.no_grade,
+        run_mode=getattr(args, "run_mode", "confirmed"),
+        catch_up=getattr(args, "catch_up", False),
     )
     print(
         f"Ledger: {outputs.ledger_csv} "
-        f"(+{outputs.picks_recorded} new, graded {outputs.picks_graded}, "
-        f"{outputs.pending_count} pending)"
+        f"(+{outputs.picks_recorded} new, {outputs.picks_backfilled} backfilled slates, "
+        f"graded {outputs.picks_graded}, {outputs.pending_count} pending)"
     )
     print(f"Summary: {outputs.summary_txt}")
     print(f"Daily rollup: {outputs.daily_rollup_csv}")

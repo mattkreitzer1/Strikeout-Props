@@ -6,6 +6,16 @@ daily_rollup_path: data/tracker/daily_rollup.csv
 ev_rollup_path: data/tracker/ev_rollup.csv
 side_rollup_path: data/tracker/side_rollup.csv
 
+# Durable copies of each day's value sheet (survive past 14-day Actions artifacts).
+# Used to self-heal the tracker when an afternoon run is missed entirely.
+value_history_dir: data/value_history
+
+# Self-healing backfill: each run scans this many prior days and records any
+# slate missing from the ledger from its saved value sheet (prefers confirmed,
+# falls back to the early sheet so a missed afternoon is not lost).
+catch_up_lookback_days: 5
+catch_up_allow_early_fallback: true
+
 # Tag picks so rollups stay tied to a model era (Phase 2 + calibration + pitch splits).
 model_version: phase2_v1
 

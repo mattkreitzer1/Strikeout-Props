@@ -347,6 +347,28 @@ Outputs (committed by GitHub Actions so history survives between runs):
 | `data/tracker/ev_rollup.csv` | W/L and ROI grouped by EV bucket (thin / moderate / strong / elite) |
 | `data/tracker/side_rollup.csv` | W/L and ROI grouped by OVER vs UNDER |
 | `data/tracker/summary.txt` | Rolling totals, EV buckets, OVER/UNDER split, last 7 slate days (also in daily email) |
+| `data/value_history/value_<date>.<mode>.csv` | Durable copy of each day's value sheet (used for self-healing backfill) |
+
+The `ledger.csv` `pick_source` column records how each pick entered the ledger:
+`confirmed`/`early` (recorded same-day) or `confirmed_backfill`/`early_backfill`
+(recovered later by the catch-up step). Filter on it to isolate true confirmed
+performance from approximate early-sheet recoveries.
+
+### Self-healing backfill
+
+Every run saves its value sheet to `data/value_history/` and scans the last
+`catch_up_lookback_days` (default 5) slates. Any date missing from the ledger is
+recorded automatically from its saved sheet — preferring the confirmed sheet and
+falling back to the morning early sheet. This means a slate where the confirmed
+afternoon run was skipped entirely (and never run manually) is still captured by
+the next morning run, as long as that day produced any value sheet. Only days
+where **both** morning and afternoon never ran are unrecoverable.
+
+Trigger it manually for a date:
+
+```bash
+python -m mlb_kprop track-performance --date 2026-06-18 --no-record --catch-up
+```
 
 **Backfill from existing value sheets:**
 

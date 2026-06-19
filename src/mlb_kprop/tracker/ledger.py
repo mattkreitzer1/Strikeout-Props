@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import shutil
 from dataclasses import dataclass
-from datetime import date as Date, datetime
+from datetime import date as Date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +30,7 @@ LEDGER_COLUMNS = [
     "model_version",
     "recorded_at",
     "graded_at",
+    "pick_source",
 ]
 
 
@@ -49,6 +51,7 @@ class TrackerOutputs:
     picks_recorded: int
     picks_graded: int
     pending_count: int
+    picks_backfilled: int = 0
 
 
 def load_tracker_config(config_path: Path = DEFAULT_CONFIG_PATH) -> dict[str, Any]:
@@ -125,8 +128,13 @@ def _load_ledger(path: Path) -> pd.DataFrame:
         "model_version",
         "recorded_at",
         "graded_at",
+        "pick_source",
     ):
         df[col] = df[col].apply(lambda v: pd.NA if pd.isna(v) else str(v))
+    # Rows recorded before pick_source existed were all confirmed-run picks.
+    df["pick_source"] = df["pick_source"].apply(
+        lambda v: "confirmed" if pd.isna(v) else v
+    )
     return df[LEDGER_COLUMNS]
 
 
@@ -174,6 +182,7 @@ def record_picks_from_value(
     value_csv: Path,
     ledger_path: Path,
     model_version: str = "phase2_v1",
+    source: str = "confirmed",
 ) -> int:
     """Append flagged plays from value_<date>.csv to the ledger."""
     if not value_csv.exists():
@@ -219,6 +228,7 @@ def record_picks_from_value(
                 "model_version": model_version,
                 "recorded_at": now,
                 "graded_at": pd.NA,
+                "pick_source": source,
             }
         )
 
@@ -482,6 +492,86 @@ def build_daily_rollup(ledger: pd.DataFrame) -> pd.DataFrame:
     return rollup
 
 
+def history_sheet_path(history_dir: Path, slate_date: Date, run_mode: str) -> Path:
+    """Durable per-day value sheet path, e.g. value_2026-06-15.confirmed.csv."""
+    return history_dir / f"value_{slate_date.isoformat()}.{run_mode}.csv"
+
+
+def save_value_history(
+    value_csv: Path,
+    slate_date: Date,
+    run_mode: str,
+    history_dir: Path,
+) -> Path | None:
+    """Copy a value sheet into the durable history store so it outlives artifacts."""
+    if not value_csv.exists():
+        return None
+    history_dir.mkdir(parents=True, exist_ok=True)
+    dest = history_sheet_path(history_dir, slate_date, run_mode)
+    shutil.copyfile(value_csv, dest)
+    return dest
+
+
+def find_history_sheet(
+    history_dir: Path,
+    slate_date: Date,
+    allow_early_fallback: bool = True,
+) -> tuple[Path, str] | None:
+    """Best saved value sheet for a date: (path, source_label). Prefer confirmed."""
+    confirmed = history_sheet_path(history_dir, slate_date, "confirmed")
+    if confirmed.exists():
+        return confirmed, "confirmed_backfill"
+    if allow_early_fallback:
+        early = history_sheet_path(history_dir, slate_date, "early")
+        if early.exists():
+            return early, "early_backfill"
+    return None
+
+
+def catch_up_unrecorded(
+    ledger_path: Path,
+    history_dir: Path,
+    run_date: Date,
+    lookback_days: int = 5,
+    model_version: str = "phase2_v1",
+    allow_early_fallback: bool = True,
+) -> dict[str, str]:
+    """
+    Record any prior slate that is missing from the ledger but has a saved value
+    sheet. Recovers days where the confirmed afternoon run never executed.
+
+    Returns {date: source_label} for each backfilled slate.
+    """
+    if lookback_days <= 0 or not history_dir.exists():
+        return {}
+
+    ledger = _load_ledger(ledger_path)
+    recorded_dates = (
+        set(ledger["slate_date"].astype(str)) if not ledger.empty else set()
+    )
+
+    backfilled: dict[str, str] = {}
+    for offset in range(1, lookback_days + 1):
+        slate = run_date - timedelta(days=offset)
+        slate_key = slate.isoformat()
+        if slate_key in recorded_dates:
+            continue
+        found = find_history_sheet(history_dir, slate, allow_early_fallback)
+        if found is None:
+            continue
+        sheet_path, source = found
+        added = record_picks_from_value(
+            slate,
+            sheet_path,
+            ledger_path,
+            model_version=model_version,
+            source=source,
+        )
+        if added:
+            backfilled[slate_key] = f"{source} (+{added})"
+    return backfilled
+
+
 def track_performance(
     run_date: Date,
     reports_root: Path = Path("reports"),
@@ -489,9 +579,15 @@ def track_performance(
     config_path: Path = DEFAULT_CONFIG_PATH,
     record_today: bool = True,
     grade_pending: bool = True,
+    run_mode: str = "confirmed",
+    catch_up: bool = False,
 ) -> TrackerOutputs:
     """
     Record today's flagged picks, grade older pending rows, write summary files.
+
+    When ``catch_up`` is set, also save today's value sheet to the durable history
+    store and backfill any recent slate missing from the ledger (self-healing when
+    a confirmed afternoon run was skipped entirely).
     """
     cfg = load_tracker_config(config_path)
     ledger_path = ledger_path_from_config(cfg)
@@ -499,10 +595,17 @@ def track_performance(
     rollup_path = Path(cfg.get("daily_rollup_path", "data/tracker/daily_rollup.csv"))
     ev_rollup_path = Path(cfg.get("ev_rollup_path", "data/tracker/ev_rollup.csv"))
     side_rollup_path = Path(cfg.get("side_rollup_path", "data/tracker/side_rollup.csv"))
+    history_dir = Path(cfg.get("value_history_dir", "data/value_history"))
+    lookback_days = int(cfg.get("catch_up_lookback_days", 5))
+    allow_early = bool(cfg.get("catch_up_allow_early_fallback", True))
     buckets = ev_buckets_from_config(cfg)
 
     value_csv = value_path or reports_root / f"value_{run_date.isoformat()}.csv"
     model_version = str(cfg.get("model_version", "phase2_v1"))
+
+    if catch_up:
+        save_value_history(value_csv, run_date, run_mode, history_dir)
+
     picks_recorded = 0
     if record_today:
         picks_recorded = record_picks_from_value(
@@ -510,7 +613,22 @@ def track_performance(
             value_csv,
             ledger_path,
             model_version=model_version,
+            source=run_mode,
         )
+
+    picks_backfilled = 0
+    if catch_up:
+        backfilled = catch_up_unrecorded(
+            ledger_path,
+            history_dir,
+            run_date,
+            lookback_days=lookback_days,
+            model_version=model_version,
+            allow_early_fallback=allow_early,
+        )
+        picks_backfilled = len(backfilled)
+        for slate_key, detail in sorted(backfilled.items()):
+            print(f"  Backfilled missing slate {slate_key}: {detail}")
 
     picks_graded = 0
     if grade_pending:
@@ -546,4 +664,5 @@ def track_performance(
         picks_recorded=picks_recorded,
         picks_graded=picks_graded,
         pending_count=pending_count,
+        picks_backfilled=picks_backfilled,
     )

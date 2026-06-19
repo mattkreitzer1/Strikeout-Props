@@ -129,11 +129,14 @@ def run_lineup_refresh(
             reports_root=out_dir,
             value_path=value_csv,
             record_today=record_tracker_picks,
+            run_mode=run_mode,
+            catch_up=True,
         )
         tracker_summary = tracker_outputs.summary_txt
         print(
             f"  {tracker_outputs.ledger_csv} "
             f"(+{tracker_outputs.picks_recorded} new, "
+            f"{tracker_outputs.picks_backfilled} backfilled slates, "
             f"graded {tracker_outputs.picks_graded}, "
             f"{tracker_outputs.pending_count} pending)"
         )
@@ -265,11 +268,14 @@ def run_daily(
                 reports_root=out_dir,
                 value_path=value_csv,
                 record_today=record_tracker_picks,
+                run_mode=run_mode,
+                catch_up=True,
             )
             tracker_summary = tracker_outputs.summary_txt
             print(
                 f"  {tracker_outputs.ledger_csv} "
                 f"(+{tracker_outputs.picks_recorded} new, "
+                f"{tracker_outputs.picks_backfilled} backfilled slates, "
                 f"graded {tracker_outputs.picks_graded}, "
                 f"{tracker_outputs.pending_count} pending)"
             )
