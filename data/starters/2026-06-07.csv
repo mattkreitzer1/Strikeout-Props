@@ -1,0 +1,31 @@
+player_id,player_name,pitcher_throws,opp_lhb_pct,batters_faced,opp_team_id,lineup_source,game_status,home_team_abbr,lineup_batter_ids,notes
+645261,"Alcantara, Sandy",R,0.6667,,139,lineup,Final,,650490|666018|680700|691406|656775|683748|668723|676439|670764,Tampa Bay Rays @ Miami Marlins | opp_lhb_lineup
+669358,"Baz, Shane",R,0.5556,,141,lineup,Final,,543807|682818|665489|662139|676391|678218|672960|665926|664770,Baltimore Orioles @ Toronto Blue Jays | opp_lhb_lineup
+623211,"Brazobán, Huascar",R,0.2222,,135,lineup,Final,,665487|701538|664034|592518|593428|669369|687749|669392|666023,New York Mets @ San Diego Padres | opp_lhb_lineup
+681347,"Burrows, Mike",R,0.4444,,133,lineup,Final,,701762|703607|669127|691016|667670|671732|680869|643446|675961,Athletics @ Houston Astros | opp_lhb_lineup
+702070,"Cameron, Noah",L,0.3333,,142,lineup,Final,,656484|686797|606115|665019|605137|668904|663616|807712|605170,Kansas City Royals @ Minnesota Twins | opp_lhb_lineup
+676282,"Cantillo, Joey",L,0.3333,,140,lineup,Final,,670032|673962|694497|679822|677649|592626|669394|680737|553869,Cleveland Guardians @ Texas Rangers | opp_lhb_lineup
+622491,"Castillo, Luis",R,0.4444,,116,lineup,Final,,663837|805808|650402|682985|693307|670097|679529|656716|672761,Seattle Mariners @ Detroit Tigers | opp_lhb_lineup
+676917,"Cavalli, Cade",R,0.6667,,109,lineup,Final,,606466|682998|672515|571448|656976|814439|672695|545121|678489,Washington Nationals @ Arizona Diamondbacks | opp_lhb_lineup
+675660,"Drohan, Shane",L,0.5556,,115,lineup,Final,,650489|678662|681198|696100|691720|664983|666397|694514|687859,Milwaukee Brewers @ Colorado Rockies | opp_lhb_lineup
+693821,"Elder, Bryce",R,0.6667,,134,lineup,Final,,673995|693304|668804|656811|665833|682997|663968|669707|682848,Pittsburgh Pirates @ Atlanta Braves | opp_lhb_lineup
+656427,"Flaherty, Jack",R,0.3333,,136,lineup,Final,,702284|677594|647304|668227|645302|608701|621550|806068|640902,Seattle Mariners @ Detroit Tigers | opp_lhb_lineup
+607536,"Freeland, Kyle",L,0.3333,,158,lineup,Final,,694192|668930|661388|683734|596142|669003|650859|686217|687401,Milwaukee Brewers @ Colorado Rockies | opp_lhb_lineup
+592332,"Gausman, Kevin",R,0.4444,,110,lineup,Final,,621493|683002|668939|624413|669087|681297|641933|702616|677942,Baltimore Orioles @ Toronto Blue Jays | opp_lhb_lineup
+656457,"Gilbert, Tyler",L,0.5556,,143,lineup,Final,,656941|607208|547180|669016|664761|681082|666969|702222|665561,Chicago White Sox @ Philadelphia Phillies | opp_lhb_lineup
+643377,"Jax, Griffin",R,0.5556,,146,lineup,Final,,689414|672640|669065|669364|681393|665923|805300|691788|691594,Tampa Bay Rays @ Miami Marlins | opp_lhb_lineup
+695611,"Jump, Gage",L,0.2222,,117,lineup,Final,,665161|670541|572233|670623|701358|676694|543877|664774|514888,Athletics @ Houston Astros | opp_lhb_lineup
+695076,"Lowder, Rhett",R,0.5556,,138,lineup,Final,,802139|671056|676475|691023|663457|663494|665877|676369|687363,Cincinnati Reds @ St. Louis Cardinals | opp_lhb_lineup
+686790,"McDonald, Trevor",R,0.5556,,112,lineup,Live,,691718|694208|683737|608324|664023|673548|663538|699393|608348,San Francisco Giants @ Chicago Cubs | opp_lhb_lineup
+700241,"McGreevy, Michael",R,0.3333,,113,lineup,Final,,694362|668709|701398|667472|668715|666181|680574|663886|695490,Cincinnati Reds @ St. Louis Cardinals | opp_lhb_lineup
+682254,"Montgomery, Mason",L,0.3333,,144,lineup,Final,,660670|643289|621566|645277|642086|663586|573262|622761|642851,Pittsburgh Pirates @ Atlanta Braves | opp_lhb_lineup
+605400,"Nola, Aaron",R,0.5556,,145,lineup,Final,,803011|678246|700337|695657|805367|545341|671976|691011|656537,Chicago White Sox @ Philadelphia Phillies | opp_lhb_lineup
+687570,"Prielipp, Connor",L,0.3333,,118,lineup,Final,,657041|686681|672580|516782|686469|679845|686555|695600|686475,Kansas City Royals @ Minnesota Twins | opp_lhb_lineup
+693645,"Schlittler, Cam",R,0.4444,,111,lineup,Final,,680776|678882|677800|575929|807799|681508|702332|655316|643396,Boston Red Sox @ New York Yankees | opp_lhb_lineup
+686218,"Sheehan, Emmet",R,0.2222,,108,lineup,Final,,687263|545361|685133|672724|694384|666176|663611|642350|665861,Los Angeles Angels @ Los Angeles Dodgers | opp_lhb_lineup
+667755,"Soriano, José",R,0.7778,,119,lineup,Final,,660271|518692|663656|571970|669743|687221|669899|500743|690976,Los Angeles Angels @ Los Angeles Dodgers | opp_lhb_lineup
+647336,"Soroka, Michael",R,0.6667,,120,lineup,Final,,695578|671277|678554|682928|686611|695734|660688|677588|696285,Washington Nationals @ Arizona Diamondbacks | opp_lhb_lineup
+624133,"Suarez, Ranger",L,0.6667,,147,lineup,Final,,502671|700250|641355|641857|663757|683011|665862|676609|641555,Boston Red Sox @ New York Yankees | opp_lhb_lineup
+592791,"Taillon, Jameson",R,0.5556,,137,lineup,Live,,669477|646240|650333|642715|808982|805811|656305|691740|687551,San Francisco Giants @ Chicago Cubs | opp_lhb_lineup
+681190,"Vásquez, Randy",R,0.6667,,121,lineup,Final,,701807|666182|665742|676724|805999|543760|683146|669004|620443,New York Mets @ San Diego Padres | opp_lhb_lineup
+594798,"deGrom, Jacob",R,0.7778,,114,lineup,Final,,683953|608070|800050|700932|682177|682657|681807|672275|656413,Cleveland Guardians @ Texas Rangers | opp_lhb_lineup

@@ -9,8 +9,13 @@ k_sigma_max: 3.25
 sigma_lineup_default_add: 0.35
 sigma_bf_std_multiplier: 0.08
 
-# Flag a side when model probability beats no-vig implied by at least this much (0.03 = 3%).
-min_edge: 0.03
+# Flag a side when model probability beats no-vig implied by at least this much (0.05 = 5%).
+# Small prob-edge sanity floor; the real filter is now min_ev below.
+min_edge: 0.05
+
+# Only flag plays whose EV clears this floor (0.15 = 15%).
+# Backtest on first 73 graded picks: EV>=15% went 14-13 (-1.7% ROI) vs -27% ROI for all picks.
+min_ev: 0.15
 
 # Use no-vig implied probs (over + under normalized to 100%) for edge calculation.
 use_no_vig_implied: true
@@ -21,12 +26,14 @@ max_fair_k_book_gap: 1.75
 
 # Stricter filters for the morning (early) run before lineups confirm.
 early_run:
+  min_ev: 0.15
   max_ev: 0.22
   max_fair_k_book_gap: 1.25
   require_lineup_source: null
 
 # Confirmed-lineup afternoon refresh (Option 1).
 confirmed_run:
+  min_ev: 0.15
   max_ev: 0.35
   max_fair_k_book_gap: 1.75
   require_lineup_source: lineup

@@ -188,7 +188,7 @@ Output: `reports/value_<date>.csv` with model vs no-vig implied probability, **e
 
 Tweak the normal spread around `fair_k` in `config/value_defaults.yaml` (`k_sigma`, `min_edge`).
 
-Tweak the normal spread around `fair_k` in `config/value_defaults.yaml` (`k_sigma`, `min_edge`, `max_ev`, `max_fair_k_book_gap`). **Early** vs **confirmed** run modes apply different guardrails (`early_run` / `confirmed_run` sections).
+Tweak filters in `config/value_defaults.yaml` (`k_sigma`, `min_edge`, `min_ev`, `max_ev`, `max_fair_k_book_gap`). A play must clear **both** `min_edge` (probability edge) and `min_ev` (expected value, default 0.15) to be flagged. **Early** vs **confirmed** run modes apply different guardrails (`early_run` / `confirmed_run` sections).
 
 ### Two-run schedule (confirmed lineups)
 

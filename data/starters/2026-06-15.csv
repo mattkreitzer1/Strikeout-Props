@@ -1,0 +1,21 @@
+player_id,player_name,pitcher_throws,opp_lhb_pct,batters_faced,opp_team_id,lineup_source,game_status,home_team_abbr,lineup_batter_ids,notes
+674841,"Alvarez, Andrew",L,0.2222,,118,lineup,Live,,657041|677951|695506|672580|516782|521692|679845|695600|686555,Kansas City Royals @ Washington Nationals | opp_lhb_lineup
+623454,"Anderson, Drew",R,0.2222,,117,lineup,Live,,665161|670541|572233|670623|514888|666211|701358|694728|543877,Detroit Tigers @ Houston Astros | opp_lhb_lineup
+695505,"Burns, Chase",R,0.6667,,121,lineup,Live,,701807|666182|665742|676724|805999|543760|683146|669004|682626,New York Mets @ Cincinnati Reds | opp_lhb_lineup
+669372,"Ginn, J.T.",R,0.7778,,134,lineup,Preview,,687462|664040|668804|656811|693304|682848|682997|663968|699013,Pittsburgh Pirates @ Athletics | opp_lhb_lineup
+669022,"Gore, MacKenzie",L,0.1111,,142,lineup,Live,,668885|621439|665019|668904|605137|693459|807712|668952|656577,Minnesota Twins @ Texas Rangers | opp_lhb_lineup
+687473,"Gusto, Ryan",R,0.6667,,143,lineup,Live,,656941|607208|547180|669016|681082|592663|687282|702222|624641,Miami Marlins @ Philadelphia Phillies | opp_lhb_lineup
+684007,"Imanaga, Shota",L,0.2222,,115,lineup,Live,,650489|671289|681198|696100|678662|694249|664983|691720|690924,Colorado Rockies @ Chicago Cubs | opp_lhb_lineup
+683003,"Jones, Jared",R,0.5556,,133,lineup,Preview,,701762|669127|691016|805779|666126|680869|671732|703607|643446,Pittsburgh Pirates @ Athletics | opp_lhb_lineup
+641778,"Lauer, Eric",L,0.2222,,139,lineup,Preview,,650490|666018|691406|668723|810938|596103|656775|663743|670764,Tampa Bay Rays @ Los Angeles Dodgers | opp_lhb_lineup
+547179,"Lorenzen, Michael",R,0.4444,,112,lineup,Live,,691718|608324|683737|673548|664023|663538|694208|807713|621020,Colorado Rockies @ Chicago Cubs | opp_lhb_lineup
+607259,"Martinez, Nick",R,0.7778,,119,lineup,Preview,,660271|681624|518692|605141|571970|663656|669899|687221|690976,Tampa Bay Rays @ Los Angeles Dodgers | opp_lhb_lineup
+669160,"May, Dustin",R,0.4444,,135,lineup,Live,,665487|701538|592518|657757|593428|695238|664034|823550|660710,San Diego Padres @ St. Louis Cardinals | opp_lhb_lineup
+668964,"Myers, Tobias",R,0.2222,,113,lineup,Live,,694362|668709|701398|668715|553993|682622|680574|663886|695490,New York Mets @ Cincinnati Reds | opp_lhb_lineup
+669194,"Nelson, Ryne",R,0.3333,,108,lineup,Preview,,687263|545361|685133|666176|694384|694203|681351|622268|672724,Los Angeles Angels @ Arizona Diamondbacks | opp_lhb_lineup
+702474,"Paredes, Mike",R,0.4444,,140,lineup,Live,,592626|673962|694671|607043|669394|696030|683227|670032|553869,Minnesota Twins @ Texas Rangers | opp_lhb_lineup
+593974,"Peralta, Wandy",L,0.5556,,138,lineup,Live,,802139|671056|676475|691023|663457|691026|699625|691458|701675,San Diego Padres @ St. Louis Cardinals | opp_lhb_lineup
+687765,"Spence, Mitch",R,0.6667,,120,lineup,Live,,695578|671277|678554|682928|686611|695734|696285|660688|683083,Kansas City Royals @ Washington Nationals | opp_lhb_lineup
+678906,"Teng, Kai-Wei",R,0.6667,,116,lineup,Live,,805808|650402|681481|682985|693307|690993|679529|656716|681546,Detroit Tigers @ Houston Astros | opp_lhb_lineup
+700712,"Ureña, Walbert",R,0.4444,,109,lineup,Preview,,606466|672695|682998|672515|666971|571448|691783|656976|694371,Los Angeles Angels @ Arizona Diamondbacks | opp_lhb_lineup
+554430,"Wheeler, Zack",R,0.5556,,146,lineup,Live,,689414|672640|669065|669364|681715|665923|805300|691788|691594,Miami Marlins @ Philadelphia Phillies | opp_lhb_lineup

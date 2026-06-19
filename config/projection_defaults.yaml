@@ -13,8 +13,10 @@ infer_pitcher_throws_from_splits: true
 min_pitches_for_hand_inference: 50
 
 # Shrink platoon K% toward league average (more weight as sample grows).
+# Lowered 500 -> 450 so high-K starters aren't pulled so hard to average
+# (model under-predicted actual Ks by ~0.4 over first 73 graded picks).
 league_k_percent: 22.5
-k_shrinkage_pitches: 500
+k_shrinkage_pitches: 450
 
 # Expected batters faced: blend recent starts + default + bullpen-rest adjustment.
 batters_faced_model:
@@ -33,11 +35,13 @@ batters_faced_model:
 park_factors_path: config/park_factors.yaml
 
 # Phase 2 composite K% model (platoon + lineup opponent + whiff/chase skill).
-# Weights tuned to lean on lineup matchup + whiff (not platoon K% alone).
+# Conservative rebalance (was 0.35/0.45/0.20): trimmed the lineup-matchup pull
+# that was dragging fair_k below actual Ks and biasing picks toward UNDER, and
+# gave that weight back to the pitcher's own platoon K skill + whiff.
 k_model:
-  platoon_weight: 0.35
-  matchup_weight: 0.45
-  whiff_weight: 0.20
+  platoon_weight: 0.40
+  matchup_weight: 0.38
+  whiff_weight: 0.22
   chase_interaction_weight: 0.08
 
 # Pitch-matched lineup K%: blend arsenal-weighted batter splits with hand aggregate.

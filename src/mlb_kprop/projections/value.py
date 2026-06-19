@@ -77,6 +77,7 @@ def _run_guards(cfg: dict[str, Any], run_mode: str) -> dict[str, Any]:
     section_key = "confirmed_run" if run_mode == "confirmed" else "early_run"
     section = cfg.get(section_key) or {}
     return {
+        "min_ev": float(section.get("min_ev", cfg.get("min_ev", 0.0))),
         "max_ev": float(section.get("max_ev", cfg.get("max_ev", 0.35))),
         "max_fair_k_book_gap": float(
             section.get("max_fair_k_book_gap", cfg.get("max_fair_k_book_gap", 1.75))
@@ -138,6 +139,7 @@ def _pick_side(
     if required_lineup and lineup_source != required_lineup:
         return "PASS", f"lineup_{lineup_source or 'unknown'}"
 
+    min_ev = float(guards.get("min_ev", 0.0))
     max_ev = float(guards.get("max_ev", 1.0))
     max_gap = float(guards.get("max_fair_k_book_gap", 99.0))
 
@@ -151,6 +153,8 @@ def _pick_side(
         return "PASS", "below_min_edge"
 
     pick, edge, ev, gap = max(candidates, key=lambda row: row[1])
+    if ev < min_ev:
+        return "PASS", f"below_min_ev({ev:.0%})"
     if ev > max_ev:
         return "PASS", f"ev_cap({ev:.0%})"
     if gap > max_gap:
