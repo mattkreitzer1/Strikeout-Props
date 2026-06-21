@@ -1,0 +1,25 @@
+player_id,player_name,fair_k,fair_k_line,book_line,batters_faced,lineup_source,game_status,k_sigma,run_mode,model_p_over,model_p_under,implied_p_over,implied_p_under,no_vig_p_over,no_vig_p_under,edge_over,edge_under,ev_over,ev_under,over_odds,under_odds,pick,pass_reason
+663568,"Kolek, Stephen",3.918,4.0,3.5,20,lineup,Live,2.451,confirmed,0.5677,0.4323,0.5238,0.5455,0.4899,0.5101,0.0778,-0.0778,0.0838,-0.2074,-110,-120,PASS,game_started
+687064,"Young, Brandon",3.949,4.0,3.5,20,lineup,Preview,2.296,confirmed,0.5775,0.4225,0.5918,0.4762,0.5541,0.4459,0.0234,-0.0234,-0.0242,-0.1128,-145,110,PASS,below_min_edge
+693821,"Elder, Bryce",4.216,4.0,4.5,20,lineup,Live,2.451,confirmed,0.4539,0.5461,0.4878,0.5745,0.4592,0.5408,-0.0053,0.0053,-0.0695,-0.0494,105,-135,PASS,game_started
+687473,"Gusto, Ryan",3.737,3.5,3.5,18,lineup,Live,2.897,confirmed,0.5326,0.4674,0.5745,0.4878,0.5408,0.4592,-0.0082,0.0082,-0.0729,-0.0418,-135,105,PASS,game_started
+674841,"Alvarez, Andrew",3.797,4.0,4.5,18,lineup,Live,2.389,confirmed,0.3843,0.6157,0.4255,0.6429,0.3983,0.6017,-0.014,0.014,-0.097,-0.0422,135,-180,PASS,game_started
+547179,"Lorenzen, Michael",3.736,3.5,3.5,18,lineup,Preview,2.389,confirmed,0.5394,0.4606,0.5918,0.4762,0.5541,0.4459,-0.0148,0.0148,-0.0887,-0.0326,-145,110,PASS,below_min_edge
+672456,"Montero, Keider",3.477,3.5,3.5,18,lineup,Live,2.41,confirmed,0.4962,0.5038,0.5556,0.5122,0.5203,0.4797,-0.0241,0.0241,-0.1069,-0.0164,-125,-105,PASS,game_started
+607259,"Martinez, Nick",3.714,3.5,3.5,19,lineup,Live,2.481,confirmed,0.5344,0.4656,0.6,0.4651,0.5633,0.4367,-0.0289,0.0289,-0.1094,0.0011,-150,115,PASS,game_started
+677944,"Cecconi, Slade",3.666,3.5,3.5,18,lineup,Live,2.33,confirmed,0.5284,0.4716,0.6429,0.4255,0.6017,0.3983,-0.0733,0.0733,-0.178,0.1083,-180,135,PASS,game_started
+657277,"Webb, Logan",4.917,5.0,5.5,21,lineup,Live,2.531,confirmed,0.4089,0.5911,0.5238,0.5455,0.4899,0.5101,-0.081,0.081,-0.2194,0.0837,-110,-120,PASS,game_started
+669160,"May, Dustin",4.29,4.5,5.5,20,lineup,Live,2.494,confirmed,0.3138,0.6862,0.4444,0.6226,0.4165,0.5835,-0.1027,0.1027,-0.2939,0.1021,125,-165,PASS,game_started
+656849,"Peterson, David",4.034,4.0,4.5,19,default,Preview,2.881,confirmed,0.4358,0.5642,0.5745,0.4878,0.5408,0.4592,-0.105,0.105,-0.2415,0.1567,-135,105,PASS,lineup_default
+663436,"Martin, Davis",4.245,4.0,5.5,19,lineup,Live,2.435,confirmed,0.3031,0.6969,0.4444,0.6226,0.4165,0.5835,-0.1134,0.1134,-0.318,0.1192,125,-165,PASS,game_started
+684007,"Imanaga, Shota",4.158,4.0,4.5,18,default,Final,2.801,confirmed,0.4514,0.5486,0.6154,0.4545,0.5752,0.4248,-0.1237,0.1237,-0.2664,0.2069,-160,120,PASS,game_started
+543135,"Eovaldi, Nathan",4.909,5.0,5.5,21,lineup,Live,2.573,confirmed,0.4092,0.5908,0.5745,0.4878,0.5408,0.4592,-0.1316,0.1316,-0.2877,0.2112,-135,105,PASS,game_started
+678022,"Perkins, Jack",4.38,4.5,5.5,18,lineup,Preview,2.372,confirmed,0.3184,0.6816,0.4878,0.5745,0.4592,0.5408,-0.1408,0.1408,-0.3472,0.1865,105,-135,UNDER,
+678906,"Teng, Kai-Wei",4.5,4.5,5.5,19,lineup,Live,2.451,confirmed,0.3417,0.6583,0.5455,0.5238,0.5101,0.4899,-0.1685,0.1685,-0.3736,0.2568,-120,-110,PASS,game_started
+801139,"Tolle, Payton",4.655,4.5,6.5,20,lineup,Preview,2.538,confirmed,0.2337,0.7663,0.4651,0.6,0.4367,0.5633,-0.203,0.203,-0.4976,0.2772,115,-150,PASS,fair_book_gap(1.8)
+672282,"Detmers, Reid",5.299,5.5,6.5,19,lineup,Preview,2.372,confirmed,0.3063,0.6937,0.5455,0.5238,0.5101,0.4899,-0.2038,0.2038,-0.4384,0.3243,-120,-110,UNDER,
+554430,"Wheeler, Zack",5.114,5.0,6.5,20,default,Preview,2.68,confirmed,0.3025,0.6975,0.5455,0.5238,0.5101,0.4899,-0.2076,0.2076,-0.4454,0.3316,-120,-110,PASS,lineup_default
+686218,"Sheehan, Emmet",4.711,4.5,6.5,18,lineup,Preview,2.829,confirmed,0.2636,0.7364,0.5238,0.5455,0.4899,0.5101,-0.2263,0.2263,-0.4969,0.3502,-110,-120,PASS,ev_cap(35%)
+656302,"Cease, Dylan",4.921,5.0,6.5,18,default,Final,2.767,confirmed,0.2841,0.7159,0.5652,0.5,0.5306,0.4694,-0.2465,0.2465,-0.4974,0.4318,-130,100,PASS,game_started
+695505,"Burns, Chase",5.196,5.0,7.5,19,lineup,Live,2.342,confirmed,0.1627,0.8373,0.4878,0.5745,0.4592,0.5408,-0.2966,0.2966,-0.6666,0.4576,105,-135,PASS,game_started
+669302,"Gilbert, Logan",4.75,5.0,6.5,19,lineup,Preview,2.372,confirmed,0.2303,0.7697,0.5652,0.5,0.5306,0.4694,-0.3003,0.3003,-0.5925,0.5393,-130,100,PASS,ev_cap(54%)

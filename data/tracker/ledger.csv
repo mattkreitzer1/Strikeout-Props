@@ -79,3 +79,5 @@ slate_date,player_id,player_name,pick,book_line,fair_k,pick_edge,pick_ev,pick_od
 2026-06-19,837227,"Imai, Tatsuya",UNDER,4.5,4.091,0.1173,0.1911,115,11.0,LOSS,-1.0,phase2_v1,2026-06-19T20:35:38,2026-06-20T16:28:31,confirmed
 2026-06-19,694738,"Roupp, Landen",UNDER,5.5,4.034,0.1565,0.189,-160,7.0,LOSS,-1.0,phase2_v1,2026-06-19T20:35:38,2026-06-20T16:28:31,confirmed
 2026-06-19,667755,"Soriano, José",UNDER,4.5,4.255,0.1293,0.2369,130,6.0,LOSS,-1.0,phase2_v1,2026-06-19T22:42:29,2026-06-20T16:28:31,confirmed
+2026-06-21,672282,"Detmers, Reid",UNDER,6.5,5.299,0.2038,0.3243,-110,,PENDING,,phase2_v1,2026-06-21T18:29:31,,confirmed
+2026-06-21,678022,"Perkins, Jack",UNDER,5.5,4.38,0.1408,0.1865,-135,,PENDING,,phase2_v1,2026-06-21T18:29:31,,confirmed
