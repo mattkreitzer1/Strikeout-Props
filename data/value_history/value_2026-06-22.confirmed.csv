@@ -1,0 +1,23 @@
+player_id,player_name,fair_k,fair_k_line,book_line,batters_faced,lineup_source,game_status,k_sigma,run_mode,model_p_over,model_p_under,implied_p_over,implied_p_under,no_vig_p_over,no_vig_p_under,edge_over,edge_under,ev_over,ev_under,over_odds,under_odds,pick,pass_reason
+518876,"Kelly, Merrill",4.056,4.0,3.5,20,lineup,Preview,2.41,confirmed,0.5912,0.4088,0.5238,0.5455,0.4899,0.5101,0.1013,-0.1013,0.1287,-0.2506,-110,-120,PASS,below_min_ev(13%)
+805673,"Matthews, Zebby",4.735,4.5,4.5,22,lineup,Preview,2.296,confirmed,0.5408,0.4592,0.5122,0.5556,0.4797,0.5203,0.0611,-0.0611,0.0558,-0.1734,-105,-125,PASS,below_min_ev(6%)
+663372,"Feltner, Ryan",3.891,4.0,3.5,18,lineup,Preview,2.372,confirmed,0.5655,0.4345,0.5455,0.5238,0.5101,0.4899,0.0553,-0.0553,0.0367,-0.1704,-120,-110,PASS,below_min_ev(4%)
+608379,"Wacha, Michael",3.975,4.0,3.5,21,lineup,Live,2.417,confirmed,0.5779,0.4221,0.5745,0.4878,0.5408,0.4592,0.0371,-0.0371,0.006,-0.1347,-135,105,PASS,game_started
+656550,"Holmes, Grant",4.175,4.0,4.5,18,lineup,Preview,2.732,confirmed,0.4527,0.5473,0.4545,0.6154,0.4248,0.5752,0.0278,-0.0278,-0.0042,-0.1106,120,-160,PASS,below_min_edge
+669467,"Pallante, Andre",3.863,4.0,3.5,19,lineup,Preview,2.296,confirmed,0.5628,0.4372,0.5745,0.4878,0.5408,0.4592,0.022,-0.022,-0.0203,-0.1038,-135,105,PASS,below_min_edge
+691951,"Aldegheri, Sam",3.893,4.0,3.5,18,default,Preview,2.722,confirmed,0.5574,0.4426,0.6296,0.4348,0.5915,0.4085,-0.0341,0.0341,-0.1147,0.018,-170,130,PASS,lineup_default
+663969,"Phillips, Tyler",3.835,4.0,4.5,18,lineup,Live,2.389,confirmed,0.3903,0.6097,0.4545,0.6154,0.4248,0.5752,-0.0345,0.0345,-0.1412,-0.0093,120,-160,PASS,game_started
+650633,"King, Michael",4.386,4.5,4.5,20,lineup,Preview,2.599,confirmed,0.4825,0.5175,0.5745,0.4878,0.5408,0.4592,-0.0583,0.0583,-0.1601,0.0609,-135,105,PASS,below_min_ev(6%)
+663903,"Singer, Brady",3.844,4.0,4.5,18,lineup,Preview,2.41,confirmed,0.3927,0.6073,0.5,0.5652,0.4694,0.5306,-0.0767,0.0767,-0.2145,0.0744,100,-130,PASS,below_min_ev(7%)
+605540,"Woodruff, Brandon",4.31,4.5,5.5,18,lineup,Preview,3.051,confirmed,0.3483,0.6517,0.4651,0.6,0.4367,0.5633,-0.0884,0.0884,-0.2512,0.0862,115,-150,PASS,below_min_ev(9%)
+673540,"Senga, Kodai",3.997,4.0,4.5,18,lineup,Preview,2.372,confirmed,0.416,0.584,0.5556,0.5122,0.5203,0.4797,-0.1043,0.1043,-0.2511,0.1401,-125,-105,PASS,below_min_ev(14%)
+664285,"Valdez, Framber",4.243,4.0,4.5,20,lineup,Live,2.462,confirmed,0.4584,0.5416,0.6154,0.4545,0.5752,0.4248,-0.1167,0.1167,-0.2551,0.1915,-160,120,PASS,game_started
+641743,"Kay, Anthony",4.054,4.0,4.5,18,lineup,Preview,2.296,confirmed,0.423,0.577,0.5745,0.4878,0.5408,0.4592,-0.1178,0.1178,-0.2637,0.1829,-135,105,UNDER,
+656492,"Griffin, Foster",4.298,4.5,5.5,19,lineup,Preview,2.628,confirmed,0.3237,0.6763,0.4878,0.5745,0.4592,0.5408,-0.1355,0.1355,-0.3364,0.1773,105,-135,UNDER,
+684007,"Imanaga, Shota",4.154,4.0,5.5,18,lineup,Preview,2.451,confirmed,0.2915,0.7085,0.4878,0.5745,0.4592,0.5408,-0.1677,0.1677,-0.4025,0.2334,105,-135,UNDER,
+686613,"Brown, Hunter",4.251,4.5,5.5,18,lineup,Preview,2.296,confirmed,0.2932,0.7068,0.5238,0.5455,0.4899,0.5101,-0.1966,0.1966,-0.4402,0.2957,-110,-120,UNDER,
+543037,"Cole, Gerrit",4.461,4.5,5.5,19,lineup,Live,2.342,confirmed,0.3287,0.6713,0.5745,0.4878,0.5408,0.4592,-0.2121,0.2121,-0.4279,0.3762,-135,105,PASS,game_started
+656876,"Rasmussen, Drew",4.445,4.5,5.5,20,lineup,Live,2.41,confirmed,0.3308,0.6692,0.5918,0.4762,0.5541,0.4459,-0.2234,0.2234,-0.4411,0.4054,-145,110,PASS,game_started
+680694,"Bradish, Kyle",4.758,5.0,6.5,19,lineup,Preview,2.573,confirmed,0.2492,0.7508,0.5238,0.5455,0.4899,0.5101,-0.2407,0.2407,-0.5242,0.3764,-110,-120,PASS,ev_cap(38%)
+668909,"Williams, Gavin",4.198,4.0,6.5,18,lineup,Preview,2.389,confirmed,0.1676,0.8324,0.4651,0.6,0.4367,0.5633,-0.2691,0.2691,-0.6397,0.3874,115,-150,PASS,ev_cap(39%)
+656302,"Cease, Dylan",4.748,4.5,6.5,18,lineup,Preview,2.417,confirmed,0.2342,0.7658,0.5745,0.4878,0.5408,0.4592,-0.3066,0.3066,-0.5923,0.5698,-135,105,PASS,ev_cap(57%)
