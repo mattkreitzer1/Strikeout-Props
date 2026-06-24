@@ -24,4 +24,4 @@ Last 7 slate days:
   2026-06-16: 6-10 (16 picks, -5.67u)
   2026-06-15: 1-6 (7 picks, -5.00u)
 
-Pending (awaiting final stats): 4 (1 OVER, 3 UNDER)
+Pending (awaiting final stats): 8 (1 OVER, 7 UNDER)
