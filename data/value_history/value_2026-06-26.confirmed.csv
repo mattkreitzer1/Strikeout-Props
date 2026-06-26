@@ -1,0 +1,25 @@
+player_id,player_name,fair_k,fair_k_line,book_line,batters_faced,lineup_source,game_status,k_sigma,run_mode,model_p_over,model_p_under,implied_p_over,implied_p_under,no_vig_p_over,no_vig_p_under,edge_over,edge_under,ev_over,ev_under,over_odds,under_odds,pick,pass_reason
+668678,"Gallen, Zac",4.051,4.0,3.5,20,lineup,Preview,2.296,confirmed,0.5948,0.4052,0.5455,0.5238,0.5101,0.4899,0.0847,-0.0847,0.0905,-0.2265,-120,-110,PASS,below_min_ev(9%)
+672456,"Montero, Keider",4.078,4.0,3.5,20,lineup,Preview,2.451,confirmed,0.5932,0.4068,0.5455,0.5238,0.5101,0.4899,0.0831,-0.0831,0.0875,-0.2234,-120,-110,PASS,below_min_ev(9%)
+607259,"Martinez, Nick",3.495,3.5,3.5,19,lineup,Preview,2.451,confirmed,0.4992,0.5008,0.4651,0.6,0.4367,0.5633,0.0625,-0.0625,0.0733,-0.1653,115,-150,PASS,below_min_ev(7%)
+608372,"Sugano, Tomoyuki",3.373,3.5,3.5,19,lineup,Preview,2.435,confirmed,0.4792,0.5208,0.4545,0.6154,0.4248,0.5752,0.0544,-0.0544,0.0542,-0.1537,120,-160,PASS,below_min_ev(5%)
+700241,"McGreevy, Michael",3.763,4.0,3.5,19,lineup,Preview,2.342,confirmed,0.5447,0.4553,0.5349,0.5349,0.5,0.5,0.0447,-0.0447,0.0184,-0.1488,-115,-115,PASS,below_min_edge
+607067,"Rea, Colin",3.776,4.0,4.5,18,lineup,Preview,2.538,confirmed,0.3877,0.6123,0.4255,0.6429,0.3983,0.6017,-0.0106,0.0106,-0.0888,-0.0476,135,-180,PASS,below_min_edge
+571578,"Corbin, Patrick",3.97,4.0,3.5,18,lineup,Preview,2.342,confirmed,0.5795,0.4205,0.6429,0.4255,0.6017,0.3983,-0.0222,0.0222,-0.0985,-0.0119,-180,135,PASS,below_min_edge
+543135,"Eovaldi, Nathan",4.574,4.5,5.5,20,lineup,Preview,2.372,confirmed,0.3481,0.6519,0.4255,0.6429,0.3983,0.6017,-0.0502,0.0502,-0.1819,0.014,135,-180,PASS,below_min_ev(1%)
+621111,"Buehler, Walker",3.531,3.5,4.5,18,default,Preview,2.646,confirmed,0.3571,0.6429,0.4348,0.6296,0.4085,0.5915,-0.0514,0.0514,-0.1786,0.0211,130,-170,PASS,lineup_default
+701542,"Warren, Will",4.452,4.5,4.5,19,default,Preview,2.949,confirmed,0.4935,0.5065,0.5918,0.4762,0.5541,0.4459,-0.0606,0.0606,-0.1661,0.0636,-145,110,PASS,lineup_default
+669372,"Ginn, J.T.",5.004,5.0,5.5,21,lineup,Preview,2.342,confirmed,0.4162,0.5838,0.5122,0.5556,0.4797,0.5203,-0.0635,0.0635,-0.1875,0.0509,-105,-125,PASS,below_min_ev(5%)
+700712,"Ureña, Walbert",4.586,4.5,4.5,20,default,Preview,3.003,confirmed,0.5114,0.4886,0.6296,0.4348,0.5915,0.4085,-0.0801,0.0801,-0.1877,0.1237,-170,130,PASS,lineup_default
+674841,"Alvarez, Andrew",4.453,4.5,4.5,18,lineup,Preview,2.451,confirmed,0.4924,0.5076,0.6154,0.4545,0.5752,0.4248,-0.0828,0.0828,-0.1999,0.1168,-160,120,PASS,below_min_ev(12%)
+676282,"Cantillo, Joey",4.759,5.0,5.5,20,lineup,Preview,2.531,confirmed,0.3848,0.6152,0.5122,0.5556,0.4797,0.5203,-0.0948,0.0948,-0.2486,0.1073,-105,-125,PASS,below_min_ev(11%)
+681293,"Arrighetti, Spencer",4.814,5.0,5.5,20,lineup,Preview,2.342,confirmed,0.3848,0.6152,0.5238,0.5455,0.4899,0.5101,-0.1051,0.1051,-0.2654,0.1278,-110,-120,PASS,below_min_ev(13%)
+676974,"Meyer, Max",4.444,4.5,5.5,20,lineup,Preview,2.462,confirmed,0.334,0.666,0.4878,0.5745,0.4592,0.5408,-0.1252,0.1252,-0.3154,0.1594,105,-135,UNDER,
+669432,"Rogers, Trevor",4.009,4.0,4.5,19,lineup,Preview,2.296,confirmed,0.4153,0.5847,0.5745,0.4878,0.5408,0.4592,-0.1255,0.1255,-0.277,0.1986,-135,105,UNDER,
+671096,"Abbott, Andrew",4.108,4.0,4.5,19,lineup,Preview,2.372,confirmed,0.4344,0.5656,0.6,0.4651,0.5633,0.4367,-0.1289,0.1289,-0.276,0.2161,-150,115,UNDER,
+808963,"Sasaki, Roki",4.332,4.5,5.5,19,default,Preview,2.76,confirmed,0.3361,0.6639,0.5,0.5652,0.4694,0.5306,-0.1333,0.1333,-0.3278,0.1746,100,-130,PASS,lineup_default
+801139,"Tolle, Payton",4.544,4.5,5.5,20,lineup,Preview,2.531,confirmed,0.3528,0.6472,0.5455,0.5238,0.5101,0.4899,-0.1573,0.1573,-0.3532,0.2355,-120,-110,UNDER,
+554430,"Wheeler, Zack",4.937,5.0,6.5,19,lineup,Preview,2.296,confirmed,0.248,0.752,0.5556,0.5122,0.5203,0.4797,-0.2723,0.2723,-0.5535,0.4681,-125,-105,PASS,ev_cap(47%)
+671737,"Bradley, Taj",4.331,4.5,6.5,19,lineup,Preview,2.531,confirmed,0.1957,0.8043,0.5,0.5652,0.4694,0.5306,-0.2737,0.2737,-0.6085,0.4229,100,-130,PASS,ev_cap(42%)
+694973,"Skenes, Paul",5.356,5.5,7.5,20,lineup,Preview,2.33,confirmed,0.1787,0.8213,0.6,0.4651,0.5633,0.4367,-0.3846,0.3846,-0.7021,0.7657,-150,115,PASS,ev_cap(77%)
+694819,"Misiorowski, Jacob",5.477,5.5,8.5,21,lineup,Preview,2.451,confirmed,0.1087,0.8913,0.5556,0.5122,0.5203,0.4797,-0.4116,0.4116,-0.8043,0.7401,-125,-105,PASS,ev_cap(74%)
