@@ -107,4 +107,4 @@ slate_date,player_id,player_name,pick,book_line,fair_k,pick_edge,pick_ev,pick_od
 2026-06-26,669432,"Rogers, Trevor",UNDER,4.5,4.009,0.1255,0.1986,105,7.0,LOSS,-1.0,phase2_v1,2026-06-26T21:11:03,2026-06-27T16:56:39,confirmed
 2026-06-26,808963,"Sasaki, Roki",UNDER,5.5,4.25,0.1674,0.2349,-130,2.0,WIN,0.7692,phase2_v1,2026-06-26T23:48:06,2026-06-27T16:56:39,confirmed
 2026-06-26,801139,"Tolle, Payton",UNDER,5.5,4.544,0.1573,0.2355,-110,7.0,LOSS,-1.0,phase2_v1,2026-06-26T21:11:03,2026-06-27T16:56:39,confirmed
-2026-06-27,808967,"Yamamoto, Yoshinobu",UNDER,6.5,5.029,0.185,0.2489,-145,,PENDING,,phase2_v1,2026-06-27T23:39:40,,confirmed
+2026-06-27,808967,"Yamamoto, Yoshinobu",UNDER,6.5,5.029,0.185,0.2489,-145,4.0,WIN,0.6897,phase2_v1,2026-06-27T23:39:40,2026-06-28T18:57:01,confirmed
