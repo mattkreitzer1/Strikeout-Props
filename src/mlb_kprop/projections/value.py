@@ -213,6 +213,7 @@ def value_props(
         sigma = _model_sigma(base_sigma, proj, cfg)
         lineup_source = str(proj.get("lineup_source", ""))
         game_status = str(proj.get("game_status", ""))
+        game_start = str(proj.get("game_start", ""))
 
         p_over = model_prob_over(book_line, fair_k, sigma)
         p_under = model_prob_under(book_line, fair_k, sigma)
@@ -251,6 +252,7 @@ def value_props(
                 "batters_faced": proj.get("batters_faced", ""),
                 "lineup_source": lineup_source,
                 "game_status": game_status,
+                "game_start": game_start,
                 "k_sigma": round(sigma, 3),
                 "run_mode": run_mode,
                 "model_p_over": round(p_over, 4),

@@ -14,10 +14,15 @@ STARTERS_COLUMNS = [
     "opp_team_id",
     "lineup_source",
     "game_status",
+    "game_start",
     "home_team_abbr",
     "lineup_batter_ids",
     "notes",
 ]
+
+# Columns added after some starters files were already written; tolerate their
+# absence on load (defaulted to "") instead of failing the strict schema check.
+OPTIONAL_COLUMNS = {"game_start"}
 
 EXAMPLE_ROW = {
     "player_id": 434378,
@@ -65,7 +70,9 @@ def load_starters(
         )
 
     df = pd.read_csv(path)
-    missing = [c for c in STARTERS_COLUMNS if c not in df.columns]
+    missing = [
+        c for c in STARTERS_COLUMNS if c not in df.columns and c not in OPTIONAL_COLUMNS
+    ]
     if missing:
         raise ValueError(f"{path} missing columns: {missing}")
 
@@ -93,7 +100,13 @@ def load_starters(
         else:
             df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    for col in ("lineup_source", "game_status", "home_team_abbr", "lineup_batter_ids"):
+    for col in (
+        "lineup_source",
+        "game_status",
+        "game_start",
+        "home_team_abbr",
+        "lineup_batter_ids",
+    ):
         if col not in df.columns:
             df[col] = ""
         else:

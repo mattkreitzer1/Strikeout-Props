@@ -201,7 +201,7 @@ Lineups usually post a few hours before first pitch, so the project runs **twice
 
 In the Actions tab you'll see two separate workflows — always use **Afternoon — confirmed FINAL** for the sheet you'd actually bet. The morning email is a preview only (stricter EV caps, lineups often not posted yet).
 
-The afternoon run skips Savant (uses morning features), re-syncs **confirmed** batting orders, refreshes odds, and **records picks to the tracker**. Day games may already be underway at 4 PM — those are skipped in confirmed mode (`skip_started_games`).
+The afternoon run skips Savant (uses morning features), re-syncs **confirmed** batting orders, refreshes odds, and **records the late (post-cutoff) games to the tracker**. Early day games that start before 4 PM are recorded by the morning run instead (see [Game-time-aware recording](#game-time-aware-recording)), so they're never lost when a day game is already underway by 4 PM.
 
 Manual refresh:
 
@@ -354,15 +354,32 @@ The `ledger.csv` `pick_source` column records how each pick entered the ledger:
 (recovered later by the catch-up step). Filter on it to isolate true confirmed
 performance from approximate early-sheet recoveries.
 
+### Game-time-aware recording
+
+Each pitcher is recorded by the run that owns his game, decided by first pitch
+relative to `early_game_cutoff_et` (default 4 PM ET, matching the afternoon
+workflow):
+
+- **Early games** (first pitch before the cutoff) are recorded by the **morning**
+  run — the afternoon run would be too late, since the game has already started.
+- **Late games** (at/after the cutoff, or unknown start) are recorded by the
+  **afternoon** run, with confirmed lineups.
+
+A pitcher is recorded at most once per day (first writer wins), so an early-run
+pick is never doubled or flipped by a later sheet. The morning run now records
+its early games even though it uses early-mode projections — that's the freshest
+betting-valid data available before those games start.
+
 ### Self-healing backfill
 
 Every run saves its value sheet to `data/value_history/` and scans the last
-`catch_up_lookback_days` (default 5) slates. Any date missing from the ledger is
-recorded automatically from its saved sheet — preferring the confirmed sheet and
-falling back to the morning early sheet. This means a slate where the confirmed
-afternoon run was skipped entirely (and never run manually) is still captured by
-the next morning run, as long as that day produced any value sheet. Only days
-where **both** morning and afternoon never ran are unrecoverable.
+`catch_up_lookback_days` (default 5) slates. The backfill is **game-level**: for
+each day it records any pitcher still missing from the ledger from that day's
+saved sheets — the confirmed sheet first (late games keep confirmed data), then
+the early sheet (early games, plus any game the confirmed run never produced).
+This completes partial days (e.g. morning ran but afternoon was skipped, or vice
+versa) as well as fully-missed ones. Only days where **both** morning and
+afternoon never ran — and produced no value sheet — are unrecoverable.
 
 Trigger it manually for a date:
 

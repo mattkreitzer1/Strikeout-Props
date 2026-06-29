@@ -54,6 +54,7 @@ class CliArgs:
     value_path: Path | None = None
     catch_up: bool = False
     run_mode: str = "early"
+    record_phase: str = "all"
     dry_run: bool = False
     workflow_label: str = "daily pipeline"
     run_url: str | None = None
@@ -488,6 +489,13 @@ def _parse_args() -> CliArgs:
         help="Source label for recorded picks (early vs confirmed sheet).",
     )
     track_parser.add_argument(
+        "--record-phase",
+        choices=("early", "late", "all"),
+        default="all",
+        help="early = games before the cutoff (morning), late = at/after "
+        "(afternoon), all = every game (manual). Default all.",
+    )
+    track_parser.add_argument(
         "--catch-up",
         action="store_true",
         help="Save value history and backfill recent slates missing from the ledger.",
@@ -553,6 +561,7 @@ def _parse_args() -> CliArgs:
         value_path=getattr(ns, "value_path", None),
         catch_up=getattr(ns, "catch_up", False),
         run_mode=getattr(ns, "run_mode", "early"),
+        record_phase=getattr(ns, "record_phase", "all"),
         dry_run=getattr(ns, "dry_run", False),
         workflow_label=getattr(ns, "workflow_label", "daily pipeline"),
         run_url=getattr(ns, "run_url", None),
@@ -723,6 +732,7 @@ def _run_track_performance(args: CliArgs) -> None:
         record_today=not args.no_record,
         grade_pending=not args.no_grade,
         run_mode=getattr(args, "run_mode", "confirmed"),
+        record_phase=getattr(args, "record_phase", "all"),
         catch_up=getattr(args, "catch_up", False),
     )
     print(

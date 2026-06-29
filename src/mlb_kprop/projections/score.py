@@ -203,6 +203,7 @@ def score_projections(
 
         lineup_source = str(starter.get("lineup_source") or "")
         game_status = str(starter.get("game_status") or "")
+        game_start = str(starter.get("game_start") or "")
         home_abbr = str(starter.get("home_team_abbr") or "")
         park_factor = float(park_factors.get(home_abbr, park_factors.get("default", 1.0)))
 
@@ -258,6 +259,7 @@ def score_projections(
                 "opp_lhb_pct": opp_lhb,
                 "lineup_source": lineup_source,
                 "game_status": game_status,
+                "game_start": game_start,
                 "lineup_batters_matched": int(opp_profile["lineup_batters_matched"]),
                 "batters_faced": batters_faced,
                 "bf_detail": bf_detail,

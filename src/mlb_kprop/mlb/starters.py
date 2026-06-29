@@ -28,6 +28,7 @@ class StarterRow:
     opp_team_id: int
     lineup_source: str
     game_status: str
+    game_start: str  # ISO-8601 UTC first pitch (schedule gameDate), "" if unknown
     home_team_abbr: str
     lineup_batter_ids: str
     notes: str
@@ -180,6 +181,7 @@ def build_starters_for_date(
             orders = {"home": [], "away": []}
 
         game_status = str(game.get("status", {}).get("abstractGameState", ""))
+        game_start = str(game.get("gameDate", ""))
         home_abbr = str(home.get("team", {}).get("abbreviation", ""))
 
         for pitching_team, batting_team, batting_side in (
@@ -216,6 +218,7 @@ def build_starters_for_date(
                     opp_team_id=opp_team_id,
                     lineup_source=lineup_source,
                     game_status=game_status,
+                    game_start=game_start,
                     home_team_abbr=home_abbr,
                     lineup_batter_ids=lineup_str,
                     notes=f"{matchup} | opp_lhb_{lineup_source}",
@@ -256,6 +259,7 @@ def sync_starters_from_mlb(
                 "opp_team_id": row.opp_team_id,
                 "lineup_source": row.lineup_source,
                 "game_status": row.game_status,
+                "game_start": row.game_start,
                 "home_team_abbr": row.home_team_abbr,
                 "lineup_batter_ids": row.lineup_batter_ids,
                 "notes": row.notes,

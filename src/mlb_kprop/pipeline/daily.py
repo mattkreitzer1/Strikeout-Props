@@ -123,13 +123,15 @@ def run_lineup_refresh(
         value_csv = val_outputs.value_csv
         value_plays = _print_value_picks(value_csv, value_config)
 
-        print("\nStep 5: Track pick performance (record + grade)...")
+        record_phase = "late" if run_mode == "confirmed" else "early"
+        print(f"\nStep 5: Track pick performance (record phase={record_phase} + grade)...")
         tracker_outputs = track_performance(
             run_date=run_date,
             reports_root=out_dir,
             value_path=value_csv,
             record_today=record_tracker_picks,
             run_mode=run_mode,
+            record_phase=record_phase,
             catch_up=True,
         )
         tracker_summary = tracker_outputs.summary_txt
@@ -170,7 +172,10 @@ def run_daily(
     Savant -> features -> validate -> OddsTrader lines -> MLB starters -> projections -> EV.
     """
     if record_tracker_picks is None:
-        record_tracker_picks = run_mode == "confirmed"
+        record_tracker_picks = True
+    # Morning run records only games that start before the afternoon run (it would
+    # be too late for them); later games wait for the afternoon refresh.
+    record_phase = "early" if run_mode == "early" else "late"
 
     print(f"Running daily pipeline for {run_date.isoformat()} (mode={run_mode})")
 
@@ -262,13 +267,14 @@ def run_daily(
             value_csv = val_outputs.value_csv
             value_plays = _print_value_picks(value_csv, value_config)
 
-            print("\nStep 9: Track pick performance (grade pending)...")
+            print(f"\nStep 9: Track pick performance (record phase={record_phase})...")
             tracker_outputs = track_performance(
                 run_date=run_date,
                 reports_root=out_dir,
                 value_path=value_csv,
                 record_today=record_tracker_picks,
                 run_mode=run_mode,
+                record_phase=record_phase,
                 catch_up=True,
             )
             tracker_summary = tracker_outputs.summary_txt

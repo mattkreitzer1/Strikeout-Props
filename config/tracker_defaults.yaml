@@ -16,6 +16,12 @@ value_history_dir: data/value_history
 catch_up_lookback_days: 5
 catch_up_allow_early_fallback: true
 
+# Early/late boundary (America/New_York). Pitchers whose game starts before this
+# time are recorded by the morning run (the afternoon run is too late — the game
+# has started); later games are recorded by the afternoon run. Should match the
+# afternoon workflow's scheduled time (~4 PM ET).
+early_game_cutoff_et: "16:00"
+
 # Tag picks so rollups stay tied to a model era (Phase 2 + calibration + pitch splits).
 model_version: phase2_v1
 

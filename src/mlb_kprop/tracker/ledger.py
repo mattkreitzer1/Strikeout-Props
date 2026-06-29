@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import shutil
 from dataclasses import dataclass
-from datetime import date as Date, datetime, timedelta
+from datetime import date as Date, datetime, time, timedelta
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import yaml
@@ -13,6 +14,7 @@ from mlb_kprop.projections.value import american_to_decimal_odds
 from mlb_kprop.tracker.stats import MlbGameStatsClient
 
 DEFAULT_CONFIG_PATH = Path("config/tracker_defaults.yaml")
+_UTC = ZoneInfo("UTC")
 
 LEDGER_COLUMNS = [
     "slate_date",
@@ -152,6 +154,55 @@ def _pick_metrics(row: pd.Series) -> tuple[float, float, int]:
     raise ValueError(f"Not a tracked pick: {pick}")
 
 
+def parse_game_start(value: Any) -> datetime | None:
+    """Parse a schedule gameDate (ISO-8601, usually UTC 'Z') into aware UTC."""
+    if value is None:
+        return None
+    s = str(value).strip()
+    if not s or s.lower() == "nan":
+        return None
+    if s.endswith("Z"):
+        s = s[:-1] + "+00:00"
+    try:
+        dt = datetime.fromisoformat(s)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=_UTC)
+    return dt.astimezone(_UTC)
+
+
+def resolve_cutoff(run_date: Date, cutoff_et: str) -> datetime:
+    """The early/late boundary as an aware UTC datetime for ``run_date``.
+
+    A pitcher whose game's first pitch is before this time can't be captured by
+    the afternoon run (it has started), so the morning run owns him; later games
+    are owned by the afternoon run.
+    """
+    try:
+        hh, mm = (int(p) for p in str(cutoff_et).split(":"))
+    except ValueError:
+        hh, mm = 16, 0
+    local = datetime.combine(run_date, time(hh, mm), tzinfo=ZoneInfo("America/New_York"))
+    return local.astimezone(_UTC)
+
+
+def _in_phase(game_start: datetime | None, phase: str, cutoff_dt: datetime | None) -> bool:
+    """Whether a game belongs to the run currently recording.
+
+    early  -> first pitch strictly before the cutoff (morning owns it)
+    late   -> at/after the cutoff, OR unknown start (afternoon catches unknowns)
+    all    -> always (manual + backfill)
+    """
+    if phase == "all" or cutoff_dt is None:
+        return True
+    if phase == "early":
+        return game_start is not None and game_start < cutoff_dt
+    if phase == "late":
+        return game_start is None or game_start >= cutoff_dt
+    return True
+
+
 def grade_prop(actual_k: float, book_line: float, pick: str) -> str:
     """Return WIN, LOSS, or PUSH for a strikeout O/U prop."""
     if pick == "OVER":
@@ -183,19 +234,29 @@ def record_picks_from_value(
     ledger_path: Path,
     model_version: str = "phase2_v1",
     source: str = "confirmed",
+    phase: str = "all",
+    cutoff_dt: datetime | None = None,
 ) -> int:
-    """Append flagged plays from value_<date>.csv to the ledger."""
+    """Append flagged plays from value_<date>.csv to the ledger.
+
+    ``phase`` (with ``cutoff_dt``) restricts which games are recorded by start
+    time: ``early`` = games before the cutoff (morning run owns them), ``late``
+    = games at/after the cutoff or with unknown start (afternoon run), ``all``
+    = everything (manual + backfill). A pitcher is recorded at most once per day
+    (first writer wins), so an early-run pick is never overwritten or doubled by
+    a later sheet that flagged the other side.
+    """
     if not value_csv.exists():
         raise FileNotFoundError(f"Missing {value_csv}")
 
     value_df = pd.read_csv(value_csv)
     picks = value_df[value_df["pick"].isin(["OVER", "UNDER"])].copy()
     ledger = _load_ledger(ledger_path)
-    existing_keys = set(
+    # Dedup at the (date, pitcher) game level — one recorded pick per pitcher/day.
+    existing_games = set(
         zip(
             ledger["slate_date"].astype(str),
             ledger["player_id"].astype(str),
-            ledger["pick"].astype(str),
             strict=False,
         )
         if not ledger.empty
@@ -207,9 +268,12 @@ def record_picks_from_value(
     slate = run_date.isoformat()
 
     for _, row in picks.iterrows():
-        key = (slate, str(int(row["player_id"])), str(row["pick"]))
-        if key in existing_keys:
+        if not _in_phase(parse_game_start(row.get("game_start")), phase, cutoff_dt):
             continue
+        game_key = (slate, str(int(row["player_id"])))
+        if game_key in existing_games:
+            continue
+        existing_games.add(game_key)
         edge, ev, odds = _pick_metrics(row)
         new_rows.append(
             {
@@ -537,38 +601,42 @@ def catch_up_unrecorded(
     allow_early_fallback: bool = True,
 ) -> dict[str, str]:
     """
-    Record any prior slate that is missing from the ledger but has a saved value
-    sheet. Recovers days where the confirmed afternoon run never executed.
+    Game-level self-heal: for each of the last ``lookback_days`` slates, record
+    any pitcher still missing from the ledger using that day's saved value sheets.
 
-    Returns {date: source_label} for each backfilled slate.
+    Records from the confirmed sheet first (so late games keep their confirmed
+    data), then the early sheet (fills early games, plus any game the confirmed
+    run never produced). Per-pitcher dedup means already-recorded games are left
+    untouched, so this completes partial days as well as fully-missed ones.
+
+    Returns {date: detail} for each slate that gained rows.
     """
     if lookback_days <= 0 or not history_dir.exists():
         return {}
 
-    ledger = _load_ledger(ledger_path)
-    recorded_dates = (
-        set(ledger["slate_date"].astype(str)) if not ledger.empty else set()
-    )
-
     backfilled: dict[str, str] = {}
+    modes = ["confirmed"] + (["early"] if allow_early_fallback else [])
     for offset in range(1, lookback_days + 1):
         slate = run_date - timedelta(days=offset)
         slate_key = slate.isoformat()
-        if slate_key in recorded_dates:
-            continue
-        found = find_history_sheet(history_dir, slate, allow_early_fallback)
-        if found is None:
-            continue
-        sheet_path, source = found
-        added = record_picks_from_value(
-            slate,
-            sheet_path,
-            ledger_path,
-            model_version=model_version,
-            source=source,
-        )
-        if added:
-            backfilled[slate_key] = f"{source} (+{added})"
+        added_total = 0
+        details: list[str] = []
+        for mode in modes:
+            sheet_path = history_sheet_path(history_dir, slate, mode)
+            if not sheet_path.exists():
+                continue
+            added = record_picks_from_value(
+                slate,
+                sheet_path,
+                ledger_path,
+                model_version=model_version,
+                source=f"{mode}_backfill",
+            )
+            if added:
+                added_total += added
+                details.append(f"{mode} +{added}")
+        if added_total:
+            backfilled[slate_key] = ", ".join(details)
     return backfilled
 
 
@@ -580,17 +648,25 @@ def track_performance(
     record_today: bool = True,
     grade_pending: bool = True,
     run_mode: str = "confirmed",
+    record_phase: str = "all",
     catch_up: bool = False,
 ) -> TrackerOutputs:
     """
     Record today's flagged picks, grade older pending rows, write summary files.
 
+    ``record_phase`` controls which of today's games this run records by first
+    pitch relative to the ``early_game_cutoff_et`` config: ``early`` (morning run
+    -> games before the cutoff), ``late`` (afternoon run -> games at/after it or
+    with unknown start), or ``all`` (manual). This is what keeps early-start
+    games tied to the morning run and later games to the afternoon run.
+
     When ``catch_up`` is set, also save today's value sheet to the durable history
     store and backfill any recent slate missing from the ledger (self-healing when
-    a confirmed afternoon run was skipped entirely).
+    a run was skipped entirely).
     """
     cfg = load_tracker_config(config_path)
     ledger_path = ledger_path_from_config(cfg)
+    cutoff_dt = resolve_cutoff(run_date, str(cfg.get("early_game_cutoff_et", "16:00")))
     summary_path = Path(cfg.get("summary_path", "data/tracker/summary.txt"))
     rollup_path = Path(cfg.get("daily_rollup_path", "data/tracker/daily_rollup.csv"))
     ev_rollup_path = Path(cfg.get("ev_rollup_path", "data/tracker/ev_rollup.csv"))
@@ -614,6 +690,8 @@ def track_performance(
             ledger_path,
             model_version=model_version,
             source=run_mode,
+            phase=record_phase,
+            cutoff_dt=cutoff_dt,
         )
 
     picks_backfilled = 0
