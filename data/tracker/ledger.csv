@@ -128,7 +128,9 @@ slate_date,player_id,player_name,pick,book_line,fair_k,pick_edge,pick_ev,pick_od
 2026-06-30,681347,"Burrows, Mike",UNDER,4.5,4.088,0.1209,0.1901,110,,PENDING,,phase2_v1,2026-06-30T21:23:01,,confirmed
 2026-06-30,813349,"Early, Connelly",UNDER,5.5,4.608,0.1864,0.3235,105,,PENDING,,phase2_v1,2026-06-30T21:23:01,,confirmed
 2026-06-30,592332,"Gausman, Kevin",UNDER,5.5,4.348,0.1756,0.2704,-110,,PENDING,,phase2_v1,2026-06-30T21:23:01,,confirmed
+2026-06-30,685299,"Gordon, Tanner",OVER,3.5,3.824,0.1286,0.2176,120,,PENDING,,phase2_v1,2026-06-30T23:54:24,,confirmed
 2026-06-30,690997,"McLean, Nolan",UNDER,5.5,4.181,0.1779,0.2614,-120,,PENDING,,phase2_v1,2026-06-30T21:23:01,,confirmed
+2026-06-30,694297,"Pfaadt, Brandon",OVER,3.5,3.836,0.1363,0.2438,125,,PENDING,,phase2_v1,2026-06-30T23:54:24,,confirmed
 2026-06-30,694738,"Roupp, Landen",UNDER,4.5,4.083,0.108,0.1629,105,,PENDING,,phase2_v1,2026-06-30T21:23:01,,confirmed
 2026-06-30,667755,"Soriano, José",UNDER,5.5,4.146,0.2132,0.3423,-110,,PENDING,,phase2_v1,2026-06-30T21:23:01,,confirmed
 2026-06-30,687075,"Sproat, Brandon",UNDER,5.5,3.991,0.2173,0.3336,-120,,PENDING,,phase2_v1,2026-06-30T21:23:01,,confirmed
