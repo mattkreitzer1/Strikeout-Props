@@ -143,3 +143,4 @@ slate_date,player_id,player_name,pick,book_line,fair_k,pick_edge,pick_ev,pick_od
 2026-07-01,675512,"Melton, Troy",UNDER,4.5,3.822,0.132,0.1943,-105,7.0,LOSS,-1.0,phase2_v1,2026-07-01T16:44:21,2026-07-01T20:54:12,early
 2026-07-01,676974,"Meyer, Max",UNDER,5.5,4.657,0.1753,0.3008,105,,PENDING,,phase2_v1,2026-07-01T20:54:12,,confirmed
 2026-07-01,642547,"Peralta, Freddy",UNDER,4.5,3.999,0.1112,0.1613,100,,PENDING,,phase2_v1,2026-07-01T16:44:21,,early
+2026-07-01,701542,"Warren, Will",UNDER,5.5,4.852,0.1308,0.2004,100,7.0,LOSS,-1.0,phase2_v1,2026-07-01T21:00:06,2026-07-01T21:00:06,early
